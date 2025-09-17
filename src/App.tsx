@@ -7,6 +7,8 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AppLayout } from "@/components/layout/app-layout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import Setup from "./pages/Setup";
+import TimetableSimple from "./pages/TimetableSimple";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,7 +22,9 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/setup" element={<Setup />} />
+            <Route path="/timetable" element={<TimetableSimple />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

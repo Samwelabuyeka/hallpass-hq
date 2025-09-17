@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils"
 
 const mainItems = [
   { title: "Dashboard", url: "/", icon: Home },
-  { title: "Upload Timetable", url: "/upload", icon: Upload },
+  { title: "Setup", url: "/setup", icon: Settings },
   { title: "My Timetable", url: "/timetable", icon: Calendar },
   { title: "My Units", url: "/units", icon: BookOpen },
   { title: "Exam Schedule", url: "/exams", icon: ClipboardList },

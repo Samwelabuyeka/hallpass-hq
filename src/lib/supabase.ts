@@ -1,11 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
+import { Database } from './database-types'
 
 const supabaseUrl = 'https://your-project-ref.supabase.co'
 const supabaseAnonKey = 'your-anon-key'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-export type Database = {
+export type { Database } from './database-types'
+
+export type OldDatabase = {
   public: {
     Tables: {
       profiles: {
