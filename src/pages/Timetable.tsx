@@ -128,8 +128,8 @@ export default function Timetable() {
         venue: entry.venue,
         lecturer: entry.lecturer,
         unit: {
-          code: Array.isArray(entry.master_units) ? entry.master_units[0]?.code : entry.master_units.code,
-          name: Array.isArray(entry.master_units) ? entry.master_units[0]?.name : entry.master_units.name
+          code: (entry.master_units as any)?.code || '',
+          name: (entry.master_units as any)?.name || ''
         }
       }))
 
