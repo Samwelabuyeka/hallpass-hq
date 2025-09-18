@@ -191,6 +191,38 @@ export type Database = {
           updated_at?: string
         }
       }
+      announcements: {
+        Row: {
+          id: string
+          university_id: string
+          title: string
+          content: string
+          type: 'general' | 'urgent' | 'academic' | 'event'
+          author_name: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          university_id: string
+          title: string
+          content: string
+          type: 'general' | 'urgent' | 'academic' | 'event'
+          author_name: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          university_id?: string
+          title?: string
+          content?: string
+          type?: 'general' | 'urgent' | 'academic' | 'event'
+          author_name?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

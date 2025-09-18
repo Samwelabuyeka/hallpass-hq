@@ -34,9 +34,8 @@ const mainItems = [
 
 const otherItems = [
   { title: "Announcements", url: "/announcements", icon: Bell },
-  { title: "Reports", url: "/reports", icon: FileText },
+  { title: "Upload Data", url: "/admin", icon: Upload },
   { title: "Profile", url: "/profile", icon: User },
-  { title: "Settings", url: "/settings", icon: Settings },
 ]
 
 export function AppSidebar() {
