@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AuthProvider, useAuth } from "@/components/auth/auth-provider";
 import { LoginForm } from "@/components/auth/login-form";
+import { CookieBanner } from "@/components/monetization/cookie-banner";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Setup from "./pages/Setup";
@@ -16,6 +17,9 @@ import Profile from "./pages/Profile";
 import Announcements from "./pages/Announcements";
 import Admin from "./pages/Admin";
 import Exams from "./pages/Exams";
+import Files from "./pages/Files";
+import Notifications from "./pages/Notifications";
+import ClassRep from "./pages/ClassRep";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +52,9 @@ function AppRoutes() {
       <Route path="/exams" element={<Exams />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/announcements" element={<Announcements />} />
+      <Route path="/files" element={<Files />} />
+      <Route path="/notifications" element={<Notifications />} />
+      <Route path="/class-rep" element={<ClassRep />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -64,6 +71,7 @@ const App = () => (
           <BrowserRouter>
             <AppRoutes />
           </BrowserRouter>
+          <CookieBanner />
         </TooltipProvider>
       </AuthProvider>
     </ThemeProvider>

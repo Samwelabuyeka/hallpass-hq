@@ -7,7 +7,9 @@ import {
   Upload, 
   User,
   Bell,
-  FileText
+  FileText,
+  Files,
+  Crown
 } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
 
@@ -34,6 +36,9 @@ const mainItems = [
 
 const otherItems = [
   { title: "Announcements", url: "/announcements", icon: Bell },
+  { title: "Files", url: "/files", icon: Files },
+  { title: "Notifications", url: "/notifications", icon: Bell },
+  { title: "Class Rep", url: "/class-rep", icon: Crown },
   { title: "Upload Data", url: "/admin", icon: Upload },
   { title: "Profile", url: "/profile", icon: User },
 ]

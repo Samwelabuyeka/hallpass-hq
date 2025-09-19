@@ -1,4 +1,6 @@
-# Welcome to your Lovable project
+# MyStudent Portal
+
+A comprehensive student management system built with React, TypeScript, and Supabase.
 
 ## Project info
 
@@ -50,15 +52,39 @@ npm run dev
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
+## Features
+
+### 🎓 Core Features
+- **Multi-University Support**: Connect to different universities with centralized timetable management
+- **Smart Timetable System**: Master timetables managed centrally, students select their units
+- **Unit Management**: Browse and select courses/units offered by your university
+- **Exam Schedule**: View exam dates with calendar export functionality
+- **Profile Management**: Manage your student profile and preferences
+
+### 📁 File Management
+- **File Storage**: Upload, organize, and manage academic files and documents
+- **Cloud Storage**: Secure file storage with Supabase integration
+- **File Sharing**: Easy download and organization of study materials
+
+### 🔔 Communication
+- **Real-time Notifications**: Get instant updates about lectures, assignments, and announcements
+- **Class Representative System**: Students can register as class reps and send updates to classmates
+- **Announcement Board**: University-wide announcements and updates
+
+### 📱 Mobile Ready
+- **PWA Support**: Install as a mobile app
+- **Capacitor Integration**: Native mobile app functionality
+- **Responsive Design**: Works perfectly on all devices
+
 ## What technologies are used for this project?
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS, shadcn/ui components
+- **Backend**: Supabase (PostgreSQL, Auth, Storage, Real-time)
+- **Mobile**: Capacitor for native mobile apps
+- **Deployment**: Vercel-ready configuration
 
 ## How can I deploy this project?
 

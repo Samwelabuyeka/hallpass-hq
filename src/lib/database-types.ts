@@ -223,6 +223,114 @@ export type Database = {
           updated_at?: string
         }
       }
+      student_files: {
+        Row: {
+          id: string
+          student_id: string
+          file_name: string
+          file_path: string
+          file_type: string
+          file_size: number
+          unit_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          student_id: string
+          file_name: string
+          file_path: string
+          file_type: string
+          file_size: number
+          unit_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          student_id?: string
+          file_name?: string
+          file_path?: string
+          file_type?: string
+          file_size?: number
+          unit_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      class_representatives: {
+        Row: {
+          id: string
+          student_id: string
+          unit_id: string
+          university_id: string
+          semester: string
+          year: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          student_id: string
+          unit_id: string
+          university_id: string
+          semester: string
+          year: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          student_id?: string
+          unit_id?: string
+          university_id?: string
+          semester?: string
+          year?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      notifications: {
+        Row: {
+          id: string
+          recipient_id: string
+          sender_id: string | null
+          title: string
+          message: string
+          type: 'lecture' | 'assignment' | 'exam' | 'general' | 'announcement'
+          unit_id: string | null
+          is_read: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          recipient_id: string
+          sender_id?: string | null
+          title: string
+          message: string
+          type: 'lecture' | 'assignment' | 'exam' | 'general' | 'announcement'
+          unit_id?: string | null
+          is_read?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          recipient_id?: string
+          sender_id?: string | null
+          title?: string
+          message?: string
+          type?: 'lecture' | 'assignment' | 'exam' | 'general' | 'announcement'
+          unit_id?: string | null
+          is_read?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
