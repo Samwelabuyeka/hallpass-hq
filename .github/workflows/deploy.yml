@@ -26,6 +26,21 @@ jobs:
     - name: Build project
       run: npm run build
       
+    - name: Setup Java (for Android build)
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Install Capacitor and build mobile app
+      run: |
+        npx cap add android
+        npx cap sync android
+        npx cap build android
+        
     - name: Deploy to Vercel
       uses: vercel/action@v1
       with:
@@ -33,3 +48,9 @@ jobs:
         vercel-org-id: ${{ secrets.ORG_ID }}
         vercel-project-id: ${{ secrets.PROJECT_ID }}
         vercel-args: '--prod'
+        
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: android-apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk
