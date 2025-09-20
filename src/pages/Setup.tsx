@@ -5,27 +5,39 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { UniversitySelector } from "@/components/university-selector"
-import { UnitSelector } from "@/components/unit-selector"
+import { SmartUnitSelector } from "@/components/smart-unit-selector"
+import { useAuth } from "@/components/auth/auth-provider"
 import { AppLayout } from "@/components/layout/app-layout"
 import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/integrations/supabase/client"
 import { useNavigate } from "react-router-dom"
 
 export default function Setup() {
-  const [universityId, setUniversityId] = useState<string>("")
-  const [studentId, setStudentId] = useState<string>("")
-  const [semester, setSemester] = useState<string>("")
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const { toast } = useToast()
+  
+  const [universityId, setUniversityId] = useState("")
+  const [studentId, setStudentId] = useState("")
+  const [semester, setSemester] = useState<number>(1)
   const [year, setYear] = useState<number>(new Date().getFullYear())
   const [selectedUnits, setSelectedUnits] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
-  const { toast } = useToast()
-  const navigate = useNavigate()
 
   const handleSave = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save your setup",
+        variant: "destructive",
+      })
+      return
+    }
+
     if (!universityId || !studentId || selectedUnits.length === 0) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields and select at least one unit",
+        title: "Incomplete Setup",
+        description: "Please fill in all fields and select at least one unit",
         variant: "destructive",
       })
       return
@@ -33,58 +45,78 @@ export default function Setup() {
 
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("Not authenticated")
-
-      // Update profile with university and student ID
+      // Update user profile
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
           university_id: universityId,
           student_id: studentId,
-          updated_at: new Date().toISOString()
+          semester: semester,
+          year: year,
         })
-        .eq('id', user.id)
+        .eq('user_id', user.id)
 
-      if (profileError) throw profileError
+      if (profileError) {
+        throw profileError
+      }
 
-      // Save selected units
-      const studentUnitsData = selectedUnits.map(unitId => ({
-        student_id: user.id,
-        unit_id: unitId,
-        semester,
-        year,
-        is_active: true
-      }))
-
-      // First, deactivate existing units for this semester/year
+      // First, deactivate any existing units for this semester/year
       const { error: deactivateError } = await supabase
         .from('student_units')
         .update({ is_active: false })
-        .eq('student_id', user.id)
+        .eq('user_id', user.id)
         .eq('semester', semester)
         .eq('year', year)
 
-      if (deactivateError) throw deactivateError
+      if (deactivateError) {
+        throw deactivateError
+      }
 
-      // Insert new units
-      const { error: unitsError } = await supabase
+      // Get unit details for the selected units
+      const { data: unitDetails, error: unitError } = await supabase
+        .from('master_units')
+        .select('unit_code, unit_name')
+        .eq('university_id', universityId)
+        .eq('semester', semester)
+        .eq('year', year)
+        .in('unit_code', selectedUnits)
+
+      if (unitError) {
+        throw unitError
+      }
+
+      // Insert new unit enrollments
+      const unitEnrollments = unitDetails?.map(unit => ({
+        user_id: user.id,
+        university_id: universityId,
+        unit_code: unit.unit_code,
+        unit_name: unit.unit_name,
+        semester: semester,
+        year: year,
+        is_active: true,
+      })) || []
+
+      const { error: enrollError } = await supabase
         .from('student_units')
-        .insert(studentUnitsData)
+        .upsert(unitEnrollments, {
+          onConflict: 'user_id,unit_code,semester,year'
+        })
 
-      if (unitsError) throw unitsError
+      if (enrollError) {
+        throw enrollError
+      }
 
       toast({
         title: "Setup Complete",
-        description: "Your academic profile has been configured successfully",
+        description: "Your academic information has been saved successfully",
       })
 
-      navigate("/timetable")
-    } catch (error) {
+      navigate('/timetable')
+    } catch (error: any) {
       console.error('Error saving setup:', error)
       toast({
         title: "Error",
-        description: "Failed to save your setup. Please try again.",
+        description: error.message || "Failed to save setup",
         variant: "destructive",
       })
     } finally {
@@ -98,101 +130,102 @@ export default function Setup() {
         <div className="space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">Academic Setup</h2>
           <p className="text-muted-foreground">
-            Configure your university and units to get started with your timetable
+            Configure your university, academic period, and enroll in your units
           </p>
         </div>
 
-        <div className="grid gap-6 max-w-2xl">
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* University Information */}
           <Card>
             <CardHeader>
               <CardTitle>University Information</CardTitle>
               <CardDescription>
-                Select your university and provide your student details
+                Select your university and provide your student ID
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="university">University *</Label>
+                <Label>University</Label>
                 <UniversitySelector
                   value={universityId}
                   onValueChange={setUniversityId}
                   placeholder="Select your university..."
                 />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="student-id">Student ID *</Label>
+                <Label htmlFor="student-id">Student ID</Label>
                 <Input
                   id="student-id"
+                  placeholder="Enter your student ID"
                   value={studentId}
                   onChange={(e) => setStudentId(e.target.value)}
-                  placeholder="Enter your student ID"
                 />
               </div>
             </CardContent>
           </Card>
 
+          {/* Academic Period */}
           <Card>
             <CardHeader>
               <CardTitle>Academic Period</CardTitle>
               <CardDescription>
-                Specify the current semester and year
+                Specify the current semester and academic year
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="semester">Semester</Label>
-                  <Select value={semester} onValueChange={setSemester}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select semester" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Semester 1</SelectItem>
-                      <SelectItem value="2">Semester 2</SelectItem>
-                      <SelectItem value="summer">Summer</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="year">Year</Label>
-                  <Input
-                    id="year"
-                    type="number"
-                    value={year}
-                    onChange={(e) => setYear(parseInt(e.target.value))}
-                    min="2020"
-                    max="2030"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label>Semester</Label>
+                <Select value={semester.toString()} onValueChange={(value) => setSemester(parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select semester" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Semester 1</SelectItem>
+                    <SelectItem value="2">Semester 2</SelectItem>
+                    <SelectItem value="3">Semester 3</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="year">Academic Year</Label>
+                <Input
+                  id="year"
+                  type="number"
+                  placeholder="Enter academic year"
+                  value={year}
+                  onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
+                  min={2020}
+                  max={2030}
+                />
               </div>
             </CardContent>
           </Card>
+        </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Units Selection</CardTitle>
-              <CardDescription>
-                Choose the units you're enrolled in for this semester
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <UnitSelector
-                universityId={universityId}
-                selectedUnits={selectedUnits}
-                onUnitsChange={setSelectedUnits}
-                semester={semester}
-                year={year}
-              />
-            </CardContent>
-          </Card>
+        {/* Units Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Units Selection</CardTitle>
+            <CardDescription>
+              Search and select the units you're enrolled in. The search is smart - try typing unit codes, names, or departments.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SmartUnitSelector
+              universityId={universityId}
+              semester={semester}
+              year={year}
+              selectedUnits={selectedUnits}
+              onUnitsChange={setSelectedUnits}
+            />
+          </CardContent>
+        </Card>
 
-          <Button 
-            onClick={handleSave} 
-            disabled={loading}
+        <div className="flex justify-end">
+          <Button
+            onClick={handleSave}
+            disabled={loading || !universityId || !studentId || selectedUnits.length === 0}
             size="lg"
-            className="w-full"
           >
             {loading ? "Saving..." : "Complete Setup"}
           </Button>

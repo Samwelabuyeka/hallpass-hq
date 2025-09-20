@@ -1,4 +1,4 @@
-import { Moon, Sun, Menu, Bell, User } from "lucide-react"
+import { Moon, Sun, Menu, Bell, User, LogOut } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
@@ -13,9 +13,21 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { useAuth } from "@/components/auth/auth-provider"
+import { useNavigate } from "react-router-dom"
 
 export function AppHeader() {
   const { theme, setTheme } = useTheme()
+  const { user, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  const handleSignOut = async () => {
+    await signOut()
+  }
+
+  const handleProfileClick = () => {
+    navigate('/profile')
+  }
 
   return (
     <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
@@ -23,7 +35,9 @@ export function AppHeader() {
         <div className="flex items-center gap-2">
           <SidebarTrigger className="h-8 w-8" />
           <div className="hidden md:block">
-            <h1 className="text-lg font-semibold">Welcome back, Student!</h1>
+            <h1 className="text-lg font-semibold">
+              Welcome back, {user?.user_metadata?.full_name || 'Student'}!
+            </h1>
             <p className="text-sm text-muted-foreground">
               Let's manage your academic schedule
             </p>
@@ -67,22 +81,22 @@ export function AppHeader() {
             <DropdownMenuContent align="end" className="w-56 bg-popover">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">John Smith</p>
+                  <p className="text-sm font-medium">
+                    {user?.user_metadata?.full_name || 'Student'}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    student@university.edu
+                    {user?.email}
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleProfileClick}>
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                Settings
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
                 Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>
