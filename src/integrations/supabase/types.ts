@@ -14,13 +14,382 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      class_reps: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          semester: number
+          unit_code: string
+          unit_name: string
+          university_id: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          semester: number
+          unit_code: string
+          unit_name: string
+          university_id: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          semester?: number
+          unit_code?: string
+          unit_name?: string
+          university_id?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_reps_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      master_timetables: {
+        Row: {
+          created_at: string
+          day: string | null
+          exam_date: string | null
+          id: string
+          lecturer: string | null
+          semester: number
+          time_end: string | null
+          time_start: string | null
+          type: string
+          unit_code: string
+          unit_name: string
+          university_id: string
+          venue: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          day?: string | null
+          exam_date?: string | null
+          id?: string
+          lecturer?: string | null
+          semester: number
+          time_end?: string | null
+          time_start?: string | null
+          type: string
+          unit_code: string
+          unit_name: string
+          university_id: string
+          venue?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string
+          day?: string | null
+          exam_date?: string | null
+          id?: string
+          lecturer?: string | null
+          semester?: number
+          time_end?: string | null
+          time_start?: string | null
+          type?: string
+          unit_code?: string
+          unit_name?: string
+          university_id?: string
+          venue?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_timetables_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      master_units: {
+        Row: {
+          created_at: string
+          credits: number | null
+          department: string | null
+          id: string
+          semester: number
+          unit_code: string
+          unit_name: string
+          university_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          credits?: number | null
+          department?: string | null
+          id?: string
+          semester: number
+          unit_code: string
+          unit_name: string
+          university_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          credits?: number | null
+          department?: string | null
+          id?: string
+          semester?: number
+          unit_code?: string
+          unit_name?: string
+          university_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "master_units_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_recipients: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          notification_id: string
+          read_at: string | null
+          recipient_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          notification_id: string
+          read_at?: string | null
+          recipient_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          notification_id?: string
+          read_at?: string | null
+          recipient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_recipients_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          sender_id: string
+          title: string
+          type: string
+          unit_code: string | null
+          university_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          sender_id: string
+          title: string
+          type?: string
+          unit_code?: string | null
+          university_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          sender_id?: string
+          title?: string
+          type?: string
+          unit_code?: string | null
+          university_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          is_admin: boolean
+          semester: number | null
+          student_id: string | null
+          university_id: string | null
+          updated_at: string
+          user_id: string
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          is_admin?: boolean
+          semester?: number | null
+          student_id?: string | null
+          university_id?: string | null
+          updated_at?: string
+          user_id: string
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          is_admin?: boolean
+          semester?: number | null
+          student_id?: string | null
+          university_id?: string | null
+          updated_at?: string
+          user_id?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_units: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          semester: number
+          unit_code: string
+          unit_name: string
+          university_id: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          semester: number
+          unit_code: string
+          unit_name: string
+          university_id: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          semester?: number
+          unit_code?: string
+          unit_name?: string
+          university_id?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_units_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      universities: {
+        Row: {
+          code: string
+          country: string
+          created_at: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          country: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          country?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      search_units_fuzzy: {
+        Args: {
+          search_term: string
+          semester_param: number
+          university_id_param: string
+          year_param: number
+        }
+        Returns: {
+          credits: number
+          department: string
+          id: string
+          semester: number
+          similarity_score: number
+          unit_code: string
+          unit_name: string
+          year: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
