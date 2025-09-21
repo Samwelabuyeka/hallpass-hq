@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/components/auth/auth-provider"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,31 +9,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { Users, Send, Crown, BookOpen, Plus, UserCheck } from "lucide-react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 
 interface Unit {
   id: string
-  code: string
-  name: string
+  unit_code: string
+  unit_name: string
 }
 
 interface ClassRep {
   id: string
-  unit_id: string
-  semester: string
+  unit_code: string
+  unit_name: string
+  semester: number
   year: number
   is_active: boolean
-  master_units: {
-    code: string
-    name: string
-  }
-}
-
-interface Student {
-  id: string
-  full_name: string | null
-  email: string
+  created_at: string
 }
 
 export function ClassRepPanel() {
@@ -47,7 +38,7 @@ export function ClassRepPanel() {
   
   // Registration form
   const [selectedUnit, setSelectedUnit] = useState("")
-  const [semester, setSemester] = useState("")
+  const [semester, setSemester] = useState(1)
   const [year, setYear] = useState(new Date().getFullYear())
   
   // Notification form
@@ -62,14 +53,14 @@ export function ClassRepPanel() {
       const { data: profile } = await supabase
         .from('profiles')
         .select('university_id')
-        .eq('id', user?.id)
+        .eq('user_id', user?.id)
         .single()
 
       if (!profile?.university_id) return
 
       const { data, error } = await supabase
         .from('master_units')
-        .select('id, code, name')
+        .select('id, unit_code, unit_name')
         .eq('university_id', profile.university_id)
 
       if (error) throw error
@@ -86,12 +77,9 @@ export function ClassRepPanel() {
     setLoading(true)
     try {
       const { data, error } = await supabase
-        .from('class_representatives')
-        .select(`
-          *,
-          master_units(code, name)
-        `)
-        .eq('student_id', user.id)
+        .from('class_reps')
+        .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -110,26 +98,37 @@ export function ClassRepPanel() {
 
   // Register as class representative
   const registerAsClassRep = async () => {
-    if (!user || !selectedUnit || !semester) return
+    if (!user || !selectedUnit) return
     
     setRegistering(true)
     try {
       const { data: profile } = await supabase
         .from('profiles')
         .select('university_id')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .single()
 
       if (!profile?.university_id) {
         throw new Error('University not set in profile')
       }
 
+      // Get unit details
+      const { data: unit } = await supabase
+        .from('master_units')
+        .select('unit_code, unit_name')
+        .eq('id', selectedUnit)
+        .single()
+
+      if (!unit) {
+        throw new Error('Unit not found')
+      }
+
       // Check if already registered for this unit and semester
       const { data: existing } = await supabase
-        .from('class_representatives')
+        .from('class_reps')
         .select('id')
-        .eq('student_id', user.id)
-        .eq('unit_id', selectedUnit)
+        .eq('user_id', user.id)
+        .eq('unit_code', unit.unit_code)
         .eq('semester', semester)
         .eq('year', year)
         .eq('is_active', true)
@@ -139,11 +138,12 @@ export function ClassRepPanel() {
       }
 
       const { error } = await supabase
-        .from('class_representatives')
+        .from('class_reps')
         .insert({
-          student_id: user.id,
-          unit_id: selectedUnit,
+          user_id: user.id,
           university_id: profile.university_id,
+          unit_code: unit.unit_code,
+          unit_name: unit.unit_name,
           semester,
           year,
           is_active: true,
@@ -157,7 +157,6 @@ export function ClassRepPanel() {
       })
       
       setSelectedUnit("")
-      setSemester("")
       fetchClassReps()
     } catch (error: any) {
       console.error('Error registering as class rep:', error)
@@ -177,40 +176,38 @@ export function ClassRepPanel() {
     
     setSendingNotification(true)
     try {
-      // Get all students enrolled in the selected unit
-      const { data: studentUnits, error: studentsError } = await supabase
-        .from('student_units')
-        .select('student_id')
-        .eq('unit_id', selectedRepUnit)
-        .eq('is_active', true)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('university_id')
+        .eq('user_id', user.id)
+        .single()
 
-      if (studentsError) throw studentsError
-
-      if (!studentUnits || studentUnits.length === 0) {
-        throw new Error('No students found for this unit')
+      if (!profile?.university_id) {
+        throw new Error('University not set in profile')
       }
 
-      const recipientIds = studentUnits.map(su => su.student_id)
+      // Get the selected rep unit details
+      const repUnit = classReps.find(rep => rep.unit_code === selectedRepUnit)
+      if (!repUnit) {
+        throw new Error('Class rep unit not found')
+      }
 
-      // Create notifications for all students
-      const notifications = recipientIds.map(recipientId => ({
-        recipient_id: recipientId,
-        sender_id: user.id,
-        title: notificationTitle,
-        message: notificationMessage,
-        type: notificationType,
-        unit_id: selectedRepUnit,
-      }))
-
-      const { error: notificationError } = await supabase
+      const { error } = await supabase
         .from('notifications')
-        .insert(notifications)
+        .insert({
+          sender_id: user.id,
+          university_id: profile.university_id,
+          title: notificationTitle,
+          message: notificationMessage,
+          type: notificationType,
+          unit_code: selectedRepUnit,
+        })
 
-      if (notificationError) throw notificationError
+      if (error) throw error
       
       toast({
         title: "Success",
-        description: `Notification sent to ${recipientIds.length} student${recipientIds.length !== 1 ? 's' : ''}`,
+        description: "Notification sent successfully",
       })
       
       // Reset form
@@ -268,14 +265,14 @@ export function ClassRepPanel() {
                       <Crown className="h-4 w-4" />
                     </div>
                     <div>
-                      <h4 className="font-medium">{rep.master_units.code}</h4>
-                      <p className="text-sm text-muted-foreground">{rep.master_units.name}</p>
+                      <h4 className="font-medium">{rep.unit_code}</h4>
+                      <p className="text-sm text-muted-foreground">{rep.unit_name}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant={rep.is_active ? "default" : "secondary"}>
                           {rep.is_active ? "Active" : "Inactive"}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
-                          {rep.semester} {rep.year}
+                          Semester {rep.semester} {rep.year}
                         </span>
                       </div>
                     </div>
@@ -309,7 +306,7 @@ export function ClassRepPanel() {
                 <SelectContent>
                   {units.map((unit) => (
                     <SelectItem key={unit.id} value={unit.id}>
-                      {unit.code} - {unit.name}
+                      {unit.unit_code} - {unit.unit_name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -317,14 +314,14 @@ export function ClassRepPanel() {
             </div>
             <div>
               <Label htmlFor="semester">Semester</Label>
-              <Select value={semester} onValueChange={setSemester}>
+              <Select value={semester.toString()} onValueChange={(value) => setSemester(parseInt(value))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select semester" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Semester 1">Semester 1</SelectItem>
-                  <SelectItem value="Semester 2">Semester 2</SelectItem>
-                  <SelectItem value="Summer">Summer</SelectItem>
+                  <SelectItem value="1">Semester 1</SelectItem>
+                  <SelectItem value="2">Semester 2</SelectItem>
+                  <SelectItem value="3">Semester 3</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -341,7 +338,7 @@ export function ClassRepPanel() {
           </div>
           <Button
             onClick={registerAsClassRep}
-            disabled={!selectedUnit || !semester || registering}
+            disabled={!selectedUnit || registering}
             className="w-full"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -372,8 +369,8 @@ export function ClassRepPanel() {
                   </SelectTrigger>
                   <SelectContent>
                     {classReps.filter(rep => rep.is_active).map((rep) => (
-                      <SelectItem key={rep.unit_id} value={rep.unit_id}>
-                        {rep.master_units.code} - {rep.master_units.name}
+                      <SelectItem key={rep.unit_code} value={rep.unit_code}>
+                        {rep.unit_code} - {rep.unit_name}
                       </SelectItem>
                     ))}
                   </SelectContent>
