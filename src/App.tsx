@@ -20,6 +20,7 @@ import Exams from "./pages/Exams";
 import Files from "./pages/Files";
 import Notifications from "./pages/Notifications";
 import ClassRep from "./pages/ClassRep";
+import TimetableImport from "./pages/TimetableImport";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ function AppRoutes() {
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/class-rep" element={<ClassRep />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/timetable-import" element={<TimetableImport />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

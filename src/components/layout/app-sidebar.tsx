@@ -40,6 +40,7 @@ const otherItems = [
   { title: "Notifications", url: "/notifications", icon: Bell },
   { title: "Class Rep", url: "/class-rep", icon: Crown },
   { title: "Upload Data", url: "/admin", icon: Upload },
+  { title: "Import Timetable", url: "/timetable-import", icon: Upload },
   { title: "Profile", url: "/profile", icon: User },
 ]
 
