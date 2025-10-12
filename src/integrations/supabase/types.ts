@@ -58,6 +58,129 @@ export type Database = {
           },
         ]
       }
+      exam_timetables: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          end_time: string | null
+          exam_date: string | null
+          id: number
+          instructor: string | null
+          metadata: Json | null
+          room: string | null
+          semester: string | null
+          start_time: string | null
+          unit_code: string
+          unit_name: string | null
+          updated_at: string | null
+          year: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          end_time?: string | null
+          exam_date?: string | null
+          id?: never
+          instructor?: string | null
+          metadata?: Json | null
+          room?: string | null
+          semester?: string | null
+          start_time?: string | null
+          unit_code: string
+          unit_name?: string | null
+          updated_at?: string | null
+          year?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          end_time?: string | null
+          exam_date?: string | null
+          id?: never
+          instructor?: string | null
+          metadata?: Json | null
+          room?: string | null
+          semester?: string | null
+          start_time?: string | null
+          unit_code?: string
+          unit_name?: string | null
+          updated_at?: string | null
+          year?: string | null
+        }
+        Relationships: []
+      }
+      imported_rows: {
+        Row: {
+          created_at: string | null
+          id: number
+          payload: Json | null
+          source_file: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: never
+          payload?: Json | null
+          source_file?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: never
+          payload?: Json | null
+          source_file?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      main_timetables: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          end_time: string | null
+          id: number
+          instructor: string | null
+          metadata: Json | null
+          room: string | null
+          semester: string | null
+          start_time: string | null
+          unit_code: string
+          unit_name: string | null
+          updated_at: string | null
+          year: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          end_time?: string | null
+          id?: never
+          instructor?: string | null
+          metadata?: Json | null
+          room?: string | null
+          semester?: string | null
+          start_time?: string | null
+          unit_code: string
+          unit_name?: string | null
+          updated_at?: string | null
+          year?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          end_time?: string | null
+          id?: never
+          instructor?: string | null
+          metadata?: Json | null
+          room?: string | null
+          semester?: string | null
+          start_time?: string | null
+          unit_code?: string
+          unit_name?: string | null
+          updated_at?: string | null
+          year?: string | null
+        }
+        Relationships: []
+      }
       master_timetables: {
         Row: {
           created_at: string
@@ -333,6 +456,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      timetable_audit: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          id: number
+          new_row: Json | null
+          old_row: Json | null
+          operation: string
+          table_name: string
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: never
+          new_row?: Json | null
+          old_row?: Json | null
+          operation: string
+          table_name: string
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: never
+          new_row?: Json | null
+          old_row?: Json | null
+          operation?: string
+          table_name?: string
+        }
+        Relationships: []
       }
       universities: {
         Row: {
