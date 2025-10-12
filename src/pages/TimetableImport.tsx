@@ -2,141 +2,86 @@ import { useState } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Upload, CheckCircle2, AlertCircle } from "lucide-react";
-import * as XLSX from 'xlsx';
+import { Upload, CheckCircle2, AlertCircle, Download, Info } from "lucide-react";
+import { TimetableParser } from "@/utils/timetable-parsers";
 
-interface TimetableEntry {
-  unit_code: string;
-  unit_name: string;
-  type: string;
-  day: string;
-  time_start: string;
-  time_end: string;
-  venue: string | null;
-  lecturer: string | null;
-  semester: number;
-  year: number;
-  university_id: string;
+interface University {
+  id: string;
+  name: string;
+  code: string;
 }
-
-const KFU_ID = "62bfa473-d38d-4141-9e10-322a7a3ca000";
-const SEMESTER = 1;
-const YEAR = 2025;
 
 export default function TimetableImport() {
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState("");
-  const [results, setResults] = useState<{ units: number; timetables: number } | null>(null);
-
-  const parseTimeSlot = (timeSlot: string): { start: string; end: string } => {
-    const match = timeSlot.match(/(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})/);
-    if (match) {
-      return {
-        start: `${match[1]}:${match[2]}:00`,
-        end: `${match[3]}:${match[4]}:00`
-      };
-    }
-    return { start: "00:00:00", end: "00:00:00" };
-  };
-
-  const parseCellEntry = (entry: string): { code: string; room: string | null; lecturer: string | null } => {
-    if (!entry || entry.trim() === "") {
-      return { code: "", room: null, lecturer: null };
-    }
-
-    // Format: "UNIT_CODE - ROOM / LECTURER" or variations
-    const parts = entry.split('/');
-    const lecturer = parts.length > 1 ? parts[1].trim() : null;
+  const [results, setResults] = useState<{ units: number; timetables: number; parser: string } | null>(null);
+  const [universities, setUniversities] = useState<University[]>([]);
+  const [selectedUniversity, setSelectedUniversity] = useState<string>("");
+  const [semester, setSemester] = useState<string>("1");
+  const [year, setYear] = useState<string>(new Date().getFullYear().toString());
+  
+  // Load universities on mount
+  useState(() => {
+    loadUniversities();
+  });
+  
+  const loadUniversities = async () => {
+    const { data, error } = await supabase
+      .from('universities')
+      .select('id, name, code')
+      .eq('is_active', true)
+      .order('name');
     
-    const codeParts = parts[0].split('-');
-    const code = codeParts[0].trim();
-    const room = codeParts.length > 1 ? codeParts[1].trim() : null;
-
-    return { code, room, lecturer };
-  };
-
-  const determineType = (code: string): string => {
-    // You can enhance this logic based on course codes
-    if (code.includes('LAB') || code.includes('PRAC')) return 'Lab';
-    if (code.includes('TUT')) return 'Tutorial';
-    return 'Lecture';
+    if (error) {
+      console.error('Error loading universities:', error);
+      toast.error('Failed to load universities');
+      return;
+    }
+    
+    setUniversities(data || []);
+    if (data && data.length > 0) {
+      setSelectedUniversity(data[0].id);
+    }
   };
 
   const handleImport = async (file: File) => {
+    if (!selectedUniversity) {
+      toast.error('Please select a university');
+      return;
+    }
+    
     setImporting(true);
-    setProgress("Reading file...");
+    setProgress("Reading and analyzing file format...");
     
     try {
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-
-      setProgress("Parsing timetable data...");
+      // Use intelligent parser
+      const parseResult = await TimetableParser.parseFile(
+        file,
+        parseInt(semester),
+        parseInt(year),
+        selectedUniversity
+      );
       
-      const entries: TimetableEntry[] = [];
-      const uniqueUnits = new Map<string, { code: string; name: string }>();
-      
-      // Days mapping (assuming columns 1-5 are MONDAY to FRIDAY)
-      const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
-      
-      // Find time slot rows (they start with time like "07:00 - 10:00")
-      for (let row = 0; row < jsonData.length; row++) {
-        const timeSlotCell = jsonData[row][0];
-        if (timeSlotCell && typeof timeSlotCell === 'string' && timeSlotCell.includes(':')) {
-          const times = parseTimeSlot(timeSlotCell);
-          
-          // Parse entries for each day
-          for (let dayIndex = 0; dayIndex < 5; dayIndex++) {
-            const colIndex = dayIndex + 1;
-            const cellValue = jsonData[row][colIndex];
-            
-            if (cellValue && typeof cellValue === 'string') {
-              // Split by newline in case multiple classes are in one cell
-              const classes = cellValue.split('\n').filter(c => c.trim());
-              
-              for (const classEntry of classes) {
-                const parsed = parseCellEntry(classEntry);
-                if (parsed.code && parsed.code.length > 0) {
-                  const unitCode = parsed.code;
-                  
-                  // Add to unique units
-                  if (!uniqueUnits.has(unitCode)) {
-                    uniqueUnits.set(unitCode, { code: unitCode, name: unitCode });
-                  }
-                  
-                  entries.push({
-                    unit_code: unitCode,
-                    unit_name: unitCode, // We'll use code as name for now
-                    type: determineType(unitCode),
-                    day: days[dayIndex],
-                    time_start: times.start,
-                    time_end: times.end,
-                    venue: parsed.room,
-                    lecturer: parsed.lecturer,
-                    semester: SEMESTER,
-                    year: YEAR,
-                    university_id: KFU_ID
-                  });
-                }
-              }
-            }
-          }
-        }
+      if (!parseResult.success || !parseResult.data) {
+        throw new Error(parseResult.error || 'Failed to parse timetable');
       }
-
-      setProgress(`Found ${uniqueUnits.size} units and ${entries.length} timetable entries. Importing to database...`);
+      
+      const { entries, units } = parseResult.data;
+      
+      setProgress(`✓ Detected format: ${parseResult.parserUsed}\nFound ${units.size} units and ${entries.length} timetable entries. Importing to database...`);
 
       // Import units first
-      const unitsArray = Array.from(uniqueUnits.values()).map(u => ({
+      const unitsArray = Array.from(units.values()).map(u => ({
         unit_code: u.code,
         unit_name: u.name,
-        university_id: KFU_ID,
-        semester: SEMESTER,
-        year: YEAR,
-        department: 'General',
+        university_id: selectedUniversity,
+        semester: parseInt(semester),
+        year: parseInt(year),
+        department: u.department || 'General',
         credits: 3
       }));
 
@@ -172,7 +117,8 @@ export default function TimetableImport() {
 
       setResults({
         units: unitsArray.length,
-        timetables: entries.length
+        timetables: entries.length,
+        parser: parseResult.parserUsed || 'Unknown'
       });
 
       toast.success("Timetable imported successfully!");
@@ -191,6 +137,13 @@ export default function TimetableImport() {
       handleImport(file);
     }
   };
+  
+  const handleDownloadTemplate = (formatName: string) => {
+    TimetableParser.downloadTemplate(formatName);
+    toast.success('Template downloaded');
+  };
+  
+  const availableParsers = TimetableParser.getAvailableParsers();
 
   return (
     <AppLayout>
@@ -202,9 +155,65 @@ export default function TimetableImport() {
 
         <Card>
           <CardHeader>
+            <CardTitle>Configuration</CardTitle>
+            <CardDescription>
+              Select university and academic period for the timetable
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="university">University</Label>
+                <Select value={selectedUniversity} onValueChange={setSelectedUniversity}>
+                  <SelectTrigger id="university">
+                    <SelectValue placeholder="Select university" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {universities.map(uni => (
+                      <SelectItem key={uni.id} value={uni.id}>
+                        {uni.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="semester">Semester</Label>
+                <Select value={semester} onValueChange={setSemester}>
+                  <SelectTrigger id="semester">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Semester 1</SelectItem>
+                    <SelectItem value="2">Semester 2</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="year">Year</Label>
+                <Select value={year} onValueChange={setYear}>
+                  <SelectTrigger id="year">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[0, 1, 2, 3].map(offset => {
+                      const y = new Date().getFullYear() + offset;
+                      return <SelectItem key={y} value={y.toString()}>{y}</SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Upload Timetable File</CardTitle>
             <CardDescription>
-              Upload an Excel file (.xlsx, .xls, .xlsm) containing the timetable data
+              The system will automatically detect and parse the timetable format
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -240,6 +249,9 @@ export default function TimetableImport() {
                 <div className="space-y-1">
                   <p className="text-sm font-medium">Import Completed Successfully!</p>
                   <p className="text-sm text-muted-foreground">
+                    Parser used: {results.parser}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
                     Imported {results.units} units and {results.timetables} timetable entries
                   </p>
                 </div>
@@ -250,14 +262,41 @@ export default function TimetableImport() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Instructions</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5" />
+              Supported Formats & Templates
+            </CardTitle>
+            <CardDescription>
+              The system intelligently detects these timetable formats
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>1. Make sure you're logged in as an administrator</p>
-            <p>2. Select the Excel file containing the timetable data</p>
-            <p>3. The system will automatically parse and import the data</p>
-            <p>4. Units will be created/updated first, then timetable entries will be added</p>
-            <p>5. Duplicate entries will be handled automatically</p>
+          <CardContent className="space-y-4">
+            {availableParsers.map((parser, index) => (
+              <div key={index} className="flex items-start justify-between p-3 border rounded-lg">
+                <div className="flex-1">
+                  <p className="font-medium">{parser.name}</p>
+                  <p className="text-sm text-muted-foreground">{parser.description}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownloadTemplate(parser.name)}
+                  className="ml-4"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Template
+                </Button>
+              </div>
+            ))}
+            
+            <div className="pt-4 border-t space-y-2 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">How it works:</p>
+              <p>1. Select your university and academic period</p>
+              <p>2. Upload your timetable file (Excel format)</p>
+              <p>3. The system automatically detects the format and parses it</p>
+              <p>4. Units are created/updated, then timetable entries are added</p>
+              <p>5. Duplicate entries are handled automatically</p>
+            </div>
           </CardContent>
         </Card>
       </div>
