@@ -3,9 +3,11 @@ import { ParserConfig, ParseResult } from './parser-types';
 import { gridFormatParser } from './grid-format-parser';
 import { listFormatParser } from './list-format-parser';
 import { examFormatParser } from './exam-format-parser';
+import { kfuGridParser } from './kfu-grid-parser';
 
 // Register all available parsers
 const PARSERS: ParserConfig[] = [
+  kfuGridParser, // Try KFU format first as it's more specific
   gridFormatParser,
   listFormatParser,
   examFormatParser,
