@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,9 +25,9 @@ export default function TimetableImport() {
   const [year, setYear] = useState<string>(new Date().getFullYear().toString());
   
   // Load universities on mount
-  useState(() => {
+  useEffect(() => {
     loadUniversities();
-  });
+  }, []);
   
   const loadUniversities = async () => {
     const { data, error } = await supabase
