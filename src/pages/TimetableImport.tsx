@@ -4,49 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { UniversitySelector } from "@/components/university-selector";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, CheckCircle2, AlertCircle, Download, Info } from "lucide-react";
 import { TimetableParser } from "@/utils/timetable-parsers";
 
-interface University {
-  id: string;
-  name: string;
-  code: string;
-}
-
 export default function TimetableImport() {
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState("");
   const [results, setResults] = useState<{ units: number; timetables: number; parser: string } | null>(null);
-  const [universities, setUniversities] = useState<University[]>([]);
   const [selectedUniversity, setSelectedUniversity] = useState<string>("");
   const [semester, setSemester] = useState<string>("1");
   const [year, setYear] = useState<string>(new Date().getFullYear().toString());
-  
-  // Load universities on mount
-  useEffect(() => {
-    loadUniversities();
-  }, []);
-  
-  const loadUniversities = async () => {
-    const { data, error } = await supabase
-      .from('universities')
-      .select('id, name, code')
-      .eq('is_active', true)
-      .order('name');
-    
-    if (error) {
-      console.error('Error loading universities:', error);
-      toast.error('Failed to load universities');
-      return;
-    }
-    
-    setUniversities(data || []);
-    if (data && data.length > 0) {
-      setSelectedUniversity(data[0].id);
-    }
-  };
 
   const handleImport = async (file: File) => {
     if (!selectedUniversity) {
@@ -164,18 +134,11 @@ export default function TimetableImport() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="university">University</Label>
-                <Select value={selectedUniversity} onValueChange={setSelectedUniversity}>
-                  <SelectTrigger id="university">
-                    <SelectValue placeholder="Select university" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {universities.map(uni => (
-                      <SelectItem key={uni.id} value={uni.id}>
-                        {uni.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <UniversitySelector
+                  value={selectedUniversity}
+                  onValueChange={setSelectedUniversity}
+                  placeholder="Select university"
+                />
               </div>
               
               <div className="space-y-2">
