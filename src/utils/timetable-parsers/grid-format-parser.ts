@@ -2,13 +2,16 @@ import { ParserConfig, ParsedData, TimetableEntry } from './parser-types';
 import { parseTimeSlot, cleanString, extractUnitCode, determineClassType, normalizeDayName } from './utils';
 
 /**
- * Grid Format Parser - for timetables organized in a grid with days as columns
- * Example: KFU format with time slots as rows and days (Mon-Fri) as columns
+ * Universal Grid Format Parser
+ * Handles various grid-based timetables with days as columns:
+ * - Single entry per cell (simple format)
+ * - Multiple entries per cell separated by newlines (KFU-style and others)
+ * - Various entry formats: "CODE - VENUE / LECTURER" or "CODE VENUE LECTURER" etc.
  */
 
 export const gridFormatParser: ParserConfig = {
   name: 'Grid Format (Days as Columns)',
-  description: 'Parses timetables with time slots in rows and days (Mon-Fri) in columns',
+  description: 'Universal grid layout parser: time slots in rows, days in columns. Handles single or multiple classes per cell.',
   
   detect: (data: any[][]): boolean => {
     // Look for day names in the header row(s)
@@ -119,6 +122,13 @@ export const gridFormatParser: ParserConfig = {
   }
 };
 
+/**
+ * Universal cell entry parser - handles multiple formats:
+ * - "BCB 105 - 24F8 / DR ATIENO" (with venue and lecturer)
+ * - "BIT 314- 24F1/ OSCAR" (compact format)
+ * - "BCS 113 LT6 LILIAN" (space-separated)
+ * - "AAH 201 - LT2 / DR MWANGI" (simple format)
+ */
 function parseCellEntry(entry: string): { 
   code: string | null; 
   name: string | null;
@@ -126,24 +136,53 @@ function parseCellEntry(entry: string): {
   lecturer: string | null;
   department: string | null;
 } {
-  // Formats:
-  // "BCB 105 - 24F8/"
-  // "BIT 314- 24F1/ OSCAR KUNOTHO"
-  // "BCB 408 - 24F6 / OBED"
-  // "BCS 113- 24S2 /OCHOLI"
+  let code: string | null = null;
+  let venue: string | null = null;
+  let lecturer: string | null = null;
   
-  const parts = entry.split('/');
-  const lecturer = parts.length > 1 ? cleanString(parts[1]) : null;
+  // Try slash-separated format first (most common)
+  if (entry.includes('/')) {
+    const parts = entry.split('/');
+    lecturer = parts.length > 1 ? cleanString(parts[parts.length - 1]) : null;
+    
+    // Handle the code/venue part
+    const mainPart = parts[0];
+    if (mainPart.includes('-')) {
+      const dashParts = mainPart.split('-');
+      code = extractUnitCode(dashParts[0]);
+      venue = dashParts.length > 1 ? cleanString(dashParts[1]) : null;
+    } else {
+      // No dash, try to extract code from beginning
+      code = extractUnitCode(mainPart);
+      const remaining = mainPart.replace(code || '', '').trim();
+      venue = remaining || null;
+    }
+  } else if (entry.includes('-')) {
+    // Dash format without slash
+    const dashParts = entry.split('-');
+    code = extractUnitCode(dashParts[0]);
+    venue = dashParts.length > 1 ? cleanString(dashParts[1]) : null;
+  } else {
+    // Space-separated format
+    const words = entry.trim().split(/\s+/);
+    code = extractUnitCode(words.slice(0, 2).join(' ')); // Try first 1-2 words as code
+    
+    if (words.length > 2) {
+      // Remaining words could be venue and/or lecturer
+      venue = words.slice(2, 4).join(' '); // Middle words as venue
+      if (words.length > 4) {
+        lecturer = words.slice(4).join(' '); // Last words as lecturer
+      }
+    }
+  }
   
-  const codeParts = parts[0].split('-');
-  const code = extractUnitCode(codeParts[0]);
-  const venue = codeParts.length > 1 ? cleanString(codeParts[1]) : null;
+  const department = code ? code.match(/^[A-Z]{2,4}/)?.[0] || null : null;
   
   return { 
     code, 
     name: code,
     venue, 
     lecturer,
-    department: code ? code.match(/^[A-Z]+/)?.[0] : null
+    department
   };
 }
