@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AppLayout } from "@/components/layout/app-layout"
 import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/integrations/supabase/client"
 import { Calendar, Clock, MapPin, AlertTriangle, Download, Settings } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { formatDistanceToNow, isAfter, isBefore, addDays } from "date-fns"
@@ -13,7 +13,7 @@ interface ExamEntry {
   id: string
   exam_date: string | null
   venue: string | null
-  unit: {
+  course: {
     code: string
     name: string
   }
@@ -42,8 +42,8 @@ export default function Exams() {
       const { data: profile } = await supabase
         .from('profiles')
         .select('university_id, student_id')
-        .eq('id', user.id)
-        .single()
+        .eq('user_id', user.id)
+        .maybeSingle()
 
       if (!profile?.university_id || !profile?.student_id) {
         navigate("/setup")
@@ -66,42 +66,27 @@ export default function Exams() {
 
   const loadExams = async (userId: string) => {
     try {
-      // Get student's selected units
-      const { data: studentUnits, error: unitsError } = await supabase
+      // Get student's selected courses
+      const { data: studentCourses, error: coursesError } = await supabase
         .from('student_units')
-        .select(`
-          unit_id,
-          master_units!inner(
-            id,
-            code,
-            name
-          )
-        `)
-        .eq('student_id', userId)
+        .select('unit_code')
+        .eq('user_id', userId)
         .eq('is_active', true)
 
-      if (unitsError) throw unitsError
+      if (coursesError) throw coursesError
 
-      if (!studentUnits || studentUnits.length === 0) {
+      if (!studentCourses || studentCourses.length === 0) {
         setExamEntries([])
         return
       }
 
-      const unitIds = studentUnits.map(su => su.unit_id)
+      const courseCodes = studentCourses.map(sc => sc.unit_code)
 
-      // Get exam entries for these units
+      // Get exam entries for these courses
       const { data: exams, error: examsError } = await supabase
         .from('master_timetables')
-        .select(`
-          id,
-          exam_date,
-          venue,
-          master_units!inner(
-            code,
-            name
-          )
-        `)
-        .in('unit_id', unitIds)
+        .select('id, exam_date, venue, unit_code, unit_name')
+        .in('unit_code', courseCodes)
         .eq('type', 'exam')
         .not('exam_date', 'is', null)
         .order('exam_date')
@@ -112,9 +97,9 @@ export default function Exams() {
         id: exam.id,
         exam_date: exam.exam_date,
         venue: exam.venue,
-        unit: {
-          code: (exam.master_units as any)?.code || '',
-          name: (exam.master_units as any)?.name || ''
+        course: {
+          code: exam.unit_code,
+          name: exam.unit_name
         }
       }))
 
@@ -167,8 +152,8 @@ export default function Exams() {
         return `BEGIN:VEVENT
 DTSTART:${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z
 DTEND:${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z
-SUMMARY:${exam.unit.code} - ${exam.unit.name} Exam
-DESCRIPTION:Examination for ${exam.unit.name}
+SUMMARY:${exam.course.code} - ${exam.course.name} Exam
+DESCRIPTION:Examination for ${exam.course.name}
 LOCATION:${exam.venue || 'TBA'}
 END:VEVENT`
       }).join('\n')
@@ -277,11 +262,11 @@ END:VCALENDAR`
               <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Exams Found</h3>
               <p className="text-muted-foreground text-center mb-4">
-                No examination schedule found for your selected units. This could mean:
+                No examination schedule found for your selected courses. This could mean:
               </p>
               <ul className="text-sm text-muted-foreground space-y-1 mb-4">
                 <li>• The exam schedule hasn't been uploaded yet</li>
-                <li>• You need to select different units</li>
+                <li>• You need to select different courses</li>
                 <li>• Exams are scheduled for a different semester</li>
               </ul>
               <Button onClick={() => navigate("/setup")}>
@@ -316,7 +301,7 @@ END:VCALENDAR`
                           </Badge>
                           <div>
                             <div className="font-medium">
-                              {exam.unit.code} - {exam.unit.name}
+                              {exam.course.code} - {exam.course.name}
                             </div>
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <span className="flex items-center gap-1">
@@ -369,7 +354,7 @@ END:VCALENDAR`
                             </Badge>
                             <div>
                               <div className="font-medium">
-                                {exam.unit.code} - {exam.unit.name}
+                                {exam.course.code} - {exam.course.name}
                               </div>
                               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
@@ -426,7 +411,7 @@ END:VCALENDAR`
                           </Badge>
                           <div>
                             <div className="font-medium text-muted-foreground">
-                              {exam.unit.code} - {exam.unit.name}
+                              {exam.course.code} - {exam.course.name}
                             </div>
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <span className="flex items-center gap-1">
