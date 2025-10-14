@@ -8,17 +8,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AppLayout } from "@/components/layout/app-layout"
 import { useAuth } from "@/components/auth/auth-provider"
 import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/integrations/supabase/client"
 import { User, Mail, School, Hash, Calendar, Save } from "lucide-react"
 
 interface Profile {
   id: string
+  user_id: string
   email: string
   full_name: string | null
-  avatar_url: string | null
   university_id: string | null
   student_id: string | null
-  theme_preference: 'light' | 'dark' | 'system'
+  semester: number | null
+  year: number | null
+  is_admin: boolean
+  created_at: string
+  updated_at: string
 }
 
 interface University {
@@ -47,8 +51,8 @@ export default function Profile() {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user!.id)
-        .single()
+        .eq('user_id', user!.id)
+        .maybeSingle()
 
       if (error) throw error
       setProfile(data)
@@ -90,10 +94,11 @@ export default function Profile() {
           full_name: profile.full_name,
           university_id: profile.university_id,
           student_id: profile.student_id,
-          theme_preference: profile.theme_preference,
+          semester: profile.semester,
+          year: profile.year,
           updated_at: new Date().toISOString()
         })
-        .eq('id', profile.id)
+        .eq('user_id', profile.user_id)
 
       if (error) throw error
 
@@ -171,9 +176,9 @@ export default function Profile() {
             <CardContent className="space-y-6">
               <div className="flex items-center gap-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={profile.avatar_url || ""} />
+                  <AvatarImage src="" />
                   <AvatarFallback className="text-lg">
-                    {profile.full_name?.split(' ').map(n => n[0]).join('') || 
+                    {profile.full_name?.split(' ').map(n => n[0]).join('') ||
                      profile.email.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -271,34 +276,6 @@ export default function Profile() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Preferences</CardTitle>
-              <CardDescription>
-                Customize your app experience
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="theme">Theme Preference</Label>
-                <Select
-                  value={profile.theme_preference}
-                  onValueChange={(value: 'light' | 'dark' | 'system') => 
-                    setProfile({...profile, theme_preference: value})
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="light">Light</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
-                    <SelectItem value="system">System</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
 
           <div className="flex gap-4">
             <Button onClick={handleSave} disabled={saving} className="flex-1">

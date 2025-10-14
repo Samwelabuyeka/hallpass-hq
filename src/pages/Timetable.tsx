@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AppLayout } from "@/components/layout/app-layout"
 import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/integrations/supabase/client"
 import { Calendar, Clock, MapPin, User, Settings } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
@@ -48,8 +48,8 @@ export default function Timetable() {
       const { data: profile } = await supabase
         .from('profiles')
         .select('university_id, student_id')
-        .eq('id', user.id)
-        .single()
+        .eq('user_id', user.id)
+        .maybeSingle()
 
       if (!profile?.university_id || !profile?.student_id) {
         navigate("/setup")
@@ -72,47 +72,27 @@ export default function Timetable() {
 
   const loadTimetable = async (userId: string) => {
     try {
-      // Get student's selected units
-      const { data: studentUnits, error: unitsError } = await supabase
+      // Get student's selected courses
+      const { data: studentCourses, error: coursesError } = await supabase
         .from('student_units')
-        .select(`
-          unit_id,
-          master_units!inner(
-            id,
-            code,
-            name
-          )
-        `)
-        .eq('student_id', userId)
+        .select('unit_code')
+        .eq('user_id', userId)
         .eq('is_active', true)
 
-      if (unitsError) throw unitsError
+      if (coursesError) throw coursesError
 
-      if (!studentUnits || studentUnits.length === 0) {
+      if (!studentCourses || studentCourses.length === 0) {
         setTimetableEntries([])
         return
       }
 
-      const unitIds = studentUnits.map(su => su.unit_id)
+      const courseCodes = studentCourses.map(sc => sc.unit_code)
 
-      // Get timetable entries for these units
+      // Get timetable entries for these courses
       const { data: timetable, error: timetableError } = await supabase
         .from('master_timetables')
-        .select(`
-          id,
-          type,
-          day,
-          time_start,
-          time_end,
-          exam_date,
-          venue,
-          lecturer,
-          master_units!inner(
-            code,
-            name
-          )
-        `)
-        .in('unit_id', unitIds)
+        .select('id, type, day, time_start, time_end, exam_date, venue, lecturer, unit_code, unit_name')
+        .in('unit_code', courseCodes)
         .order('day')
         .order('time_start')
 
@@ -120,7 +100,7 @@ export default function Timetable() {
 
       const formattedEntries: TimetableEntry[] = (timetable || []).map(entry => ({
         id: entry.id,
-        type: entry.type,
+        type: entry.type as any,
         day: entry.day,
         time_start: entry.time_start,
         time_end: entry.time_end,
@@ -128,8 +108,8 @@ export default function Timetable() {
         venue: entry.venue,
         lecturer: entry.lecturer,
         unit: {
-          code: (entry.master_units as any)?.code || '',
-          name: (entry.master_units as any)?.name || ''
+          code: entry.unit_code,
+          name: entry.unit_name
         }
       }))
 

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AppLayout } from "@/components/layout/app-layout"
 import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/lib/supabase"
+import { supabase } from "@/integrations/supabase/client"
 import { BookOpen, Clock, MapPin, User, Settings, Plus } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
@@ -20,7 +20,7 @@ interface Unit {
 
 interface TimetableEntry {
   id: string
-  type: 'lecture' | 'tutorial' | 'lab' | 'exam'
+  type: string
   day: string | null
   time_start: string | null
   time_end: string | null
@@ -43,63 +43,60 @@ export default function Units() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Get student's selected units with their timetable entries
-      const { data: studentUnits, error } = await supabase
+      // Get student's selected courses
+      const { data: studentCourses, error } = await supabase
         .from('student_units')
-        .select(`
-          unit_id,
-          master_units!inner(
-            id,
-            code,
-            name,
-            department,
-            semester,
-            year,
-            credits
-          )
-        `)
-        .eq('student_id', user.id)
+        .select('unit_code, unit_name')
+        .eq('user_id', user.id)
         .eq('is_active', true)
 
       if (error) throw error
 
-      if (!studentUnits || studentUnits.length === 0) {
+      if (!studentCourses || studentCourses.length === 0) {
         setUnits([])
         return
       }
 
-      // Get timetable entries for these units
-      const unitIds = studentUnits.map(su => su.unit_id)
+      const courseCodes = studentCourses.map(sc => sc.unit_code)
+
+      // Get full course details from master_units
+      const { data: courseDetails, error: detailsError } = await supabase
+        .from('master_units')
+        .select('*')
+        .in('unit_code', courseCodes)
+
+      if (detailsError) throw detailsError
+
+      // Get timetable entries for these courses
       const { data: timetableData, error: timetableError } = await supabase
         .from('master_timetables')
         .select('*')
-        .in('unit_id', unitIds)
+        .in('unit_code', courseCodes)
 
       if (timetableError) throw timetableError
 
-      // Combine unit data with timetable entries
-      const unitsWithTimetable = studentUnits.map(su => {
-        const unitData = su.master_units as any
-        const unitTimetable = (timetableData || []).filter(t => t.unit_id === su.unit_id)
+      // Combine course data with timetable entries
+      const coursesWithTimetable = (courseDetails || []).map(course => {
+        const courseTimetable = (timetableData || []).filter(t => t.unit_code === course.unit_code)
         
         return {
-          id: unitData.id,
-          code: unitData.code,
-          name: unitData.name,
-          department: unitData.department,
-          semester: unitData.semester,
-          year: unitData.year,
-          credits: unitData.credits,
-          timetable: unitTimetable
+          id: course.id,
+          code: course.unit_code,
+          name: course.unit_name,
+          department: course.department,
+          semester: course.semester?.toString() || null,
+          year: course.year,
+          credits: course.credits,
+          timetable: courseTimetable
         }
       })
 
-      setUnits(unitsWithTimetable)
+      setUnits(coursesWithTimetable)
     } catch (error) {
-      console.error('Error loading units:', error)
+      console.error('Error loading courses:', error)
       toast({
         title: "Error",
-        description: "Failed to load your units",
+        description: "Failed to load your courses",
         variant: "destructive",
       })
     } finally {
