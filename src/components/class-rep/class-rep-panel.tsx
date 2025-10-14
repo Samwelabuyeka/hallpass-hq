@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Users, Send, Crown, BookOpen, Plus, UserCheck } from "lucide-react"
 import { Label } from "@/components/ui/label"
 
-interface Unit {
+interface Course {
   id: string
   unit_code: string
   unit_name: string
@@ -30,14 +30,14 @@ interface ClassRep {
 export function ClassRepPanel() {
   const { user } = useAuth()
   const { toast } = useToast()
-  const [units, setUnits] = useState<Unit[]>([])
+  const [courses, setCourses] = useState<Course[]>([])
   const [classReps, setClassReps] = useState<ClassRep[]>([])
   const [loading, setLoading] = useState(false)
   const [registering, setRegistering] = useState(false)
   const [sendingNotification, setSendingNotification] = useState(false)
   
   // Registration form
-  const [selectedUnit, setSelectedUnit] = useState("")
+  const [selectedCourse, setSelectedCourse] = useState("")
   const [semester, setSemester] = useState(1)
   const [year, setYear] = useState(new Date().getFullYear())
   
@@ -47,8 +47,8 @@ export function ClassRepPanel() {
   const [notificationType, setNotificationType] = useState<"lecture" | "assignment" | "exam" | "general" | "announcement">("general")
   const [selectedRepUnit, setSelectedRepUnit] = useState("")
 
-  // Fetch available units
-  const fetchUnits = async () => {
+  // Fetch available courses
+  const fetchCourses = async () => {
     try {
       const { data: profile } = await supabase
         .from('profiles')
@@ -64,9 +64,9 @@ export function ClassRepPanel() {
         .eq('university_id', profile.university_id)
 
       if (error) throw error
-      setUnits(data || [])
+      setCourses(data || [])
     } catch (error) {
-      console.error('Error fetching units:', error)
+      console.error('Error fetching courses:', error)
     }
   }
 
@@ -98,7 +98,7 @@ export function ClassRepPanel() {
 
   // Register as class representative
   const registerAsClassRep = async () => {
-    if (!user || !selectedUnit) return
+    if (!user || !selectedCourse) return
     
     setRegistering(true)
     try {
@@ -112,29 +112,29 @@ export function ClassRepPanel() {
         throw new Error('University not set in profile')
       }
 
-      // Get unit details
-      const { data: unit } = await supabase
+      // Get course details
+      const { data: course } = await supabase
         .from('master_units')
         .select('unit_code, unit_name')
-        .eq('id', selectedUnit)
+        .eq('id', selectedCourse)
         .single()
 
-      if (!unit) {
-        throw new Error('Unit not found')
+      if (!course) {
+        throw new Error('Course not found')
       }
 
-      // Check if already registered for this unit and semester
+      // Check if already registered for this course and semester
       const { data: existing } = await supabase
         .from('class_reps')
         .select('id')
         .eq('user_id', user.id)
-        .eq('unit_code', unit.unit_code)
+        .eq('unit_code', course.unit_code)
         .eq('semester', semester)
         .eq('year', year)
         .eq('is_active', true)
 
       if (existing && existing.length > 0) {
-        throw new Error('You are already registered as class rep for this unit and semester')
+        throw new Error('You are already registered as class rep for this course and semester')
       }
 
       const { error } = await supabase
@@ -142,8 +142,8 @@ export function ClassRepPanel() {
         .insert({
           user_id: user.id,
           university_id: profile.university_id,
-          unit_code: unit.unit_code,
-          unit_name: unit.unit_name,
+          unit_code: course.unit_code,
+          unit_name: course.unit_name,
           semester,
           year,
           is_active: true,
@@ -156,7 +156,7 @@ export function ClassRepPanel() {
         description: "Successfully registered as class representative",
       })
       
-      setSelectedUnit("")
+      setSelectedCourse("")
       fetchClassReps()
     } catch (error: any) {
       console.error('Error registering as class rep:', error)
@@ -228,7 +228,7 @@ export function ClassRepPanel() {
 
   useEffect(() => {
     if (user) {
-      fetchUnits()
+      fetchCourses()
       fetchClassReps()
     }
   }, [user])
@@ -292,21 +292,21 @@ export function ClassRepPanel() {
             Register as Class Representative
           </CardTitle>
           <CardDescription>
-            Register to become a class representative for a unit
+            Register to become a class representative for a course
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
-              <Label htmlFor="unit">Unit</Label>
-              <Select value={selectedUnit} onValueChange={setSelectedUnit}>
+              <Label htmlFor="course">Course</Label>
+              <Select value={selectedCourse} onValueChange={setSelectedCourse}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select unit" />
+                  <SelectValue placeholder="Select course" />
                 </SelectTrigger>
                 <SelectContent>
-                  {units.map((unit) => (
-                    <SelectItem key={unit.id} value={unit.id}>
-                      {unit.unit_code} - {unit.unit_name}
+                  {courses.map((course) => (
+                    <SelectItem key={course.id} value={course.id}>
+                      {course.unit_code} - {course.unit_name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -338,7 +338,7 @@ export function ClassRepPanel() {
           </div>
           <Button
             onClick={registerAsClassRep}
-            disabled={!selectedUnit || registering}
+            disabled={!selectedCourse || registering}
             className="w-full"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -362,10 +362,10 @@ export function ClassRepPanel() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="rep-unit">Select Unit</Label>
+                <Label htmlFor="rep-course">Select Course</Label>
                 <Select value={selectedRepUnit} onValueChange={setSelectedRepUnit}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select unit to notify" />
+                    <SelectValue placeholder="Select course to notify" />
                   </SelectTrigger>
                   <SelectContent>
                     {classReps.filter(rep => rep.is_active).map((rep) => (
