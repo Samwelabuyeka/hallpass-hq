@@ -4,6 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TimetableUpload } from "@/components/timetable/timetable-upload"
 import { AppLayout } from "@/components/layout/app-layout"
 import { UniversitySelector } from "@/components/university-selector"
+import { AdminGuard } from "@/components/admin/admin-guard"
+import { UniversityManagement } from "@/components/admin/university-management"
+import { AnalyticsDashboard } from "@/components/admin/analytics-dashboard"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { Shield, Upload, Users, Calendar, BarChart3 } from "lucide-react"
@@ -72,8 +75,9 @@ export default function Admin() {
   }
 
   return (
-    <AppLayout>
-      <div className="flex-1 space-y-6 p-8 pt-6">
+    <AdminGuard>
+      <AppLayout>
+        <div className="flex-1 space-y-6 p-8 pt-6">
         <div className="space-y-2">
           <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Shield className="h-8 w-8" />
@@ -172,38 +176,15 @@ export default function Admin() {
           </TabsContent>
           
           <TabsContent value="manage" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>University Management</CardTitle>
-                <CardDescription>
-                  Manage university information and settings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  University management features coming soon...
-                </p>
-              </CardContent>
-            </Card>
+            <UniversityManagement />
           </TabsContent>
           
           <TabsContent value="analytics" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>System Analytics</CardTitle>
-                <CardDescription>
-                  View detailed analytics and usage reports
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Analytics dashboard coming soon...
-                </p>
-              </CardContent>
-            </Card>
+            <AnalyticsDashboard />
           </TabsContent>
         </Tabs>
-      </div>
-    </AppLayout>
+        </div>
+      </AppLayout>
+    </AdminGuard>
   )
 }
