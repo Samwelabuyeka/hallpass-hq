@@ -69,6 +69,9 @@ export const gridFormatParser: ParserConfig = {
     }
     
     // Parse entries
+    console.log(`Starting to parse timetable. Total rows: ${data.length}, Header at row: ${headerRowIndex}`);
+    console.log('Day columns found:', dayColumns);
+    
     for (let rowIndex = headerRowIndex + 1; rowIndex < data.length; rowIndex++) {
       const row = data[rowIndex];
       if (!row || row.length === 0) continue;
@@ -76,18 +79,31 @@ export const gridFormatParser: ParserConfig = {
       const timeSlotCell = cleanString(row[0]);
       const times = parseTimeSlot(timeSlotCell);
       
-      if (!times) continue; // Not a time slot row
+      if (!times) {
+        console.log(`Row ${rowIndex}: Skipping - not a valid time slot (${timeSlotCell})`);
+        continue; // Not a time slot row
+      }
+      
+      console.log(`Row ${rowIndex}: Processing time slot ${times.start} - ${times.end}`);
       
       // Parse each day's entries
       Object.entries(dayColumns).forEach(([day, colIndex]) => {
-        const cellValue = cleanString(row[colIndex]);
+        const cellValue = row[colIndex] ? String(row[colIndex]).trim() : '';
         if (!cellValue || cellValue.length < 3) return;
         
         // Split by newline in case multiple classes are in one cell
-        const classes = cellValue.split(/[\n\r]+/).filter(c => c.trim().length > 3);
+        // Also handle various line break formats
+        const classes = cellValue
+          .split(/[\n\r]+/)
+          .map(c => c.trim())
+          .filter(c => c.length > 3);
         
-        classes.forEach(classEntry => {
+        console.log(`  ${day} (col ${colIndex}): Found ${classes.length} classes in cell`);
+        
+        classes.forEach((classEntry, idx) => {
           const parsed = parseCellEntry(classEntry);
+          console.log(`    Class ${idx + 1}: "${classEntry}" -> Code: ${parsed.code}, Venue: ${parsed.venue}, Lecturer: ${parsed.lecturer}`);
+          
           if (parsed.code) {
             const unitCode = parsed.code;
             const unitName = parsed.name || unitCode;
@@ -98,6 +114,7 @@ export const gridFormatParser: ParserConfig = {
                 name: unitName,
                 department: parsed.department 
               });
+              console.log(`      ✓ New unit added: ${unitCode}`);
             }
             
             entries.push({
@@ -113,10 +130,14 @@ export const gridFormatParser: ParserConfig = {
               year,
               university_id: universityId
             });
+          } else {
+            console.log(`      ✗ Failed to extract unit code from: "${classEntry}"`);
           }
         });
       });
     }
+    
+    console.log(`Parsing complete. Extracted ${units.size} unique units and ${entries.length} timetable entries`);
     
     return { entries, units };
   }
@@ -142,13 +163,13 @@ function parseCellEntry(entry: string): {
   
   // Try slash-separated format first (most common)
   if (entry.includes('/')) {
-    const parts = entry.split('/');
+    const parts = entry.split('/').map(p => p.trim());
     lecturer = parts.length > 1 ? cleanString(parts[parts.length - 1]) : null;
     
     // Handle the code/venue part
     const mainPart = parts[0];
     if (mainPart.includes('-')) {
-      const dashParts = mainPart.split('-');
+      const dashParts = mainPart.split('-').map(p => p.trim());
       code = extractUnitCode(dashParts[0]);
       venue = dashParts.length > 1 ? cleanString(dashParts[1]) : null;
     } else {
@@ -159,7 +180,7 @@ function parseCellEntry(entry: string): {
     }
   } else if (entry.includes('-')) {
     // Dash format without slash
-    const dashParts = entry.split('-');
+    const dashParts = entry.split('-').map(p => p.trim());
     code = extractUnitCode(dashParts[0]);
     venue = dashParts.length > 1 ? cleanString(dashParts[1]) : null;
   } else {
@@ -178,9 +199,17 @@ function parseCellEntry(entry: string): {
   
   const department = code ? code.match(/^[A-Z]{2,4}/)?.[0] || null : null;
   
+  // Generate a descriptive name from code if no specific name found
+  // Format: "DEPARTMENT ### - Unit Name" (e.g., "BCB 105 - Biochemistry")
+  let name = code;
+  if (code && department) {
+    // Keep the code as the name for now since the timetable doesn't have full names
+    name = code;
+  }
+  
   return { 
     code, 
-    name: code,
+    name: name,
     venue, 
     lecturer,
     department
