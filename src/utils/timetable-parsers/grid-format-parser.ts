@@ -68,77 +68,105 @@ export const gridFormatParser: ParserConfig = {
       throw new Error('Could not find day columns in the timetable');
     }
     
-    // Parse entries
+    // Parse entries with support for continuation rows (blank time cell)
     console.log(`Starting to parse timetable. Total rows: ${data.length}, Header at row: ${headerRowIndex}`);
     console.log('Day columns found:', dayColumns);
-    
+
+    let currentTimes: { start: string; end: string } | null = null;
+
     for (let rowIndex = headerRowIndex + 1; rowIndex < data.length; rowIndex++) {
       const row = data[rowIndex];
       if (!row || row.length === 0) continue;
-      
+
       const timeSlotCell = cleanString(row[0]);
-      const times = parseTimeSlot(timeSlotCell);
-      
-      if (!times) {
-        console.log(`Row ${rowIndex}: Skipping - not a valid time slot (${timeSlotCell})`);
-        continue; // Not a time slot row
+      const parsedTimes = parseTimeSlot(timeSlotCell);
+      if (parsedTimes) {
+        currentTimes = parsedTimes;
+        console.log(`Row ${rowIndex}: New time slot ${currentTimes.start} - ${currentTimes.end}`);
       }
-      
-      console.log(`Row ${rowIndex}: Processing time slot ${times.start} - ${times.end}`);
-      
+
+      // Determine if this row has any classes in day columns
+      const hasClasses = Object.values(dayColumns).some((colIndex) => {
+        const v = row[colIndex] ? String(row[colIndex]).trim() : '';
+        return v && v.length > 3;
+      });
+
+      if (!currentTimes && !hasClasses) {
+        // Empty row before first time slot
+        continue;
+      }
+      if (!currentTimes && hasClasses) {
+        console.log(`Row ${rowIndex}: Found classes but no time slot set yet. Skipping row.`);
+        continue;
+      }
+
+      // At this point, we either found a new timeslot or are continuing the last one
       // Parse each day's entries
       Object.entries(dayColumns).forEach(([day, colIndex]) => {
-        const cellValue = row[colIndex] ? String(row[colIndex]).trim() : '';
+        const raw = row[colIndex];
+        const cellValue = raw !== undefined && raw !== null ? String(raw).trim() : '';
         if (!cellValue || cellValue.length < 3) return;
-        
+
         // Split by newline in case multiple classes are in one cell
-        // Also handle various line break formats
         const classes = cellValue
           .split(/[\n\r]+/)
-          .map(c => c.trim())
-          .filter(c => c.length > 3);
-        
+          .map((c) => c.trim())
+          .filter((c) => c.length > 3);
+
         console.log(`  ${day} (col ${colIndex}): Found ${classes.length} classes in cell`);
-        
+
         classes.forEach((classEntry, idx) => {
-          const parsed = parseCellEntry(classEntry);
-          console.log(`    Class ${idx + 1}: "${classEntry}" -> Code: ${parsed.code}, Venue: ${parsed.venue}, Lecturer: ${parsed.lecturer}`);
-          
-          if (parsed.code) {
-            const unitCode = parsed.code;
-            const unitName = parsed.name || unitCode;
-            
+          const basic = parseCellEntry(classEntry);
+
+          // Extract possibly multiple unit codes from combined entries like
+          // "BIT 113/BCS 110/CSE 110/CSC 110 - ICT1 / WAFULA"
+          const codes = Array.from(
+            new Set(
+              (classEntry.match(/[A-Z]{2,4}\s?\d{3}[A-Z]?/gi) || [])
+                .map((c) => c.replace(/\s+/g, ' ').toUpperCase())
+            )
+          );
+
+          const finalCodes = codes.length > 0 ? codes : (basic.code ? [basic.code] : []);
+
+          if (finalCodes.length === 0) {
+            console.log(`      ✗ Failed to extract unit code from: "${classEntry}"`);
+            return;
+          }
+
+          finalCodes.forEach((unitCode) => {
+            const unitName = unitCode; // No descriptive names in file; default to code
+            const department = unitCode.match(/^[A-Z]{2,4}/)?.[0] || null;
+
             if (!units.has(unitCode)) {
-              units.set(unitCode, { 
-                code: unitCode, 
+              units.set(unitCode, {
+                code: unitCode,
                 name: unitName,
-                department: parsed.department 
+                department: department || basic.department || undefined,
               });
               console.log(`      ✓ New unit added: ${unitCode}`);
             }
-            
+
             entries.push({
               unit_code: unitCode,
               unit_name: unitName,
               type: determineClassType(classEntry),
               day: day,
-              time_start: times.start,
-              time_end: times.end,
-              venue: parsed.venue,
-              lecturer: parsed.lecturer,
+              time_start: currentTimes!.start,
+              time_end: currentTimes!.end,
+              venue: basic.venue,
+              lecturer: basic.lecturer,
               semester,
               year,
-              university_id: universityId
+              university_id: universityId,
             });
-          } else {
-            console.log(`      ✗ Failed to extract unit code from: "${classEntry}"`);
-          }
+          });
         });
       });
     }
-    
+
     console.log(`Parsing complete. Extracted ${units.size} unique units and ${entries.length} timetable entries`);
-    
+
     return { entries, units };
   }
 };
