@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, CheckCircle2, AlertCircle, Download, Info } from "lucide-react";
 import { TimetableParser } from "@/utils/timetable-parsers";
+import { AdminGuard } from "@/components/admin/admin-guard";
 
 export default function TimetableImport() {
   const [importing, setImporting] = useState(false);
@@ -55,15 +56,33 @@ export default function TimetableImport() {
         credits: 3
       }));
 
-      const { error: unitsError } = await supabase
+      // Avoid duplicates without requiring a DB unique constraint
+      const { data: existing, error: existingErr } = await supabase
         .from('master_units')
-        .upsert(unitsArray, { 
-          onConflict: 'university_id,unit_code,semester,year',
-          ignoreDuplicates: false 
-        });
+        .select('unit_code')
+        .eq('university_id', selectedUniversity)
+        .eq('semester', parseInt(semester))
+        .eq('year', parseInt(year));
+
+      if (existingErr) {
+        console.error('Failed to check existing units:', existingErr);
+      }
+
+      const existingCodes = new Set((existing || []).map((e: any) => e.unit_code));
+      const newUnits = unitsArray.filter(u => !existingCodes.has(u.unit_code));
+
+      const { error: unitsError } = newUnits.length
+        ? await supabase.from('master_units').insert(newUnits)
+        : { error: null } as any;
 
       if (unitsError) {
         console.error("Units import error:", unitsError);
+        const msg = (unitsError as any).message?.toLowerCase?.() || '';
+        if (msg.includes('row-level') || msg.includes('rls') || msg.includes('permission')) {
+          toast.error('Import blocked by permissions. Admin access required to import timetables.');
+          setImporting(false);
+          return;
+        }
         throw new Error(`Failed to import units: ${unitsError.message}`);
       }
 
@@ -79,6 +98,12 @@ export default function TimetableImport() {
 
         if (timetableError) {
           console.error("Timetable import error:", timetableError);
+          const msg = (timetableError as any).message?.toLowerCase?.() || '';
+          if (msg.includes('row-level') || msg.includes('rls') || msg.includes('permission')) {
+            toast.error('Import blocked by permissions. Admin access required to import timetables.');
+            setImporting(false);
+            return;
+          }
           throw new Error(`Failed to import timetable entries: ${timetableError.message}`);
         }
 
@@ -116,8 +141,9 @@ export default function TimetableImport() {
   const availableParsers = TimetableParser.getAvailableParsers();
 
   return (
-    <AppLayout>
-      <div className="container mx-auto p-6 space-y-6">
+    <AdminGuard>
+      <AppLayout>
+        <div className="container mx-auto p-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Timetable Import Tool</h1>
           <p className="text-muted-foreground">Import timetable data for Kaimosi Friends University</p>
@@ -263,6 +289,7 @@ export default function TimetableImport() {
           </CardContent>
         </Card>
       </div>
-    </AppLayout>
+      </AppLayout>
+    </AdminGuard>
   );
 }
