@@ -362,19 +362,13 @@ export function ClassRepPanel() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="rep-course">Select Course</Label>
-                <Select value={selectedRepUnit} onValueChange={setSelectedRepUnit}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select course to notify" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classReps.filter(rep => rep.is_active).map((rep) => (
-                      <SelectItem key={rep.unit_code} value={rep.unit_code}>
-                        {rep.unit_code} - {rep.unit_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="rep-course">Course Code</Label>
+                <Input
+                  id="rep-course"
+                  placeholder="Enter course code (e.g., COS101)"
+                  value={selectedRepUnit}
+                  onChange={(e) => setSelectedRepUnit(e.target.value)}
+                />
               </div>
               
               <div>
