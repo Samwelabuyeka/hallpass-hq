@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { Calendar, Clock, MapPin, User, Settings } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { WeekCalendar } from "@/components/calendar/week-calendar"
+import { NotificationToggle } from "@/components/notifications/notification-toggle"
 
 interface TimetableEntry {
   id: string
@@ -193,6 +195,25 @@ export default function Timetable() {
           </Card>
         ) : (
           <div className="grid gap-6">
+            {/* Notification Toggle */}
+            <NotificationToggle />
+
+            {/* Week Calendar View */}
+            <WeekCalendar 
+              entries={timetableEntries
+                .filter(e => e.day && e.time_start && e.time_end)
+                .map(e => ({
+                  id: e.id,
+                  unit_code: e.unit.code,
+                  unit_name: e.unit.name,
+                  type: e.type,
+                  day: e.day!,
+                  time_start: e.time_start!,
+                  time_end: e.time_end!,
+                  venue: e.venue || undefined
+                }))}
+            />
+
             {/* Weekly Schedule */}
             <Card>
               <CardHeader>
