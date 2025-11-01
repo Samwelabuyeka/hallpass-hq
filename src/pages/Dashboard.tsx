@@ -17,6 +17,8 @@ interface DashboardStats {
   classesToday: number
   upcomingExams: number
   nextClass?: string
+  daysUntilNextExam?: number
+  nextExamUnit?: string
 }
 
 interface TodayClass {
@@ -45,7 +47,9 @@ export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     activeUnits: 0,
     classesToday: 0,
-    upcomingExams: 0
+    upcomingExams: 0,
+    daysUntilNextExam: undefined,
+    nextExamUnit: undefined
   })
   const [todaySchedule, setTodaySchedule] = useState<TodayClass[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -101,8 +105,10 @@ export default function Dashboard() {
 
       if (unitsError) throw unitsError
 
-      // Get today's classes
-      const today = new Date().toLocaleDateString('en-US', { weekday: 'long' })
+      // Get today's classes - normalize day name to UPPERCASE
+      const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()
+      console.log('Looking for classes on:', today)
+      
       const { data: todayClasses, error: classesError } = await supabase
         .from('master_timetables')
         .select('*')
@@ -112,7 +118,8 @@ export default function Dashboard() {
         .eq('day', today)
         .in('unit_code', units?.map(u => u.unit_code) || [])
 
-      if (classesError) throw classesError
+      console.log('Today classes found:', todayClasses?.length || 0)
+      if (classesError) console.error('Classes error:', classesError)
 
       // Get upcoming exams (next 30 days)
       const nextMonth = new Date()
@@ -126,14 +133,30 @@ export default function Dashboard() {
         .gte('exam_date', new Date().toISOString().split('T')[0])
         .lte('exam_date', nextMonth.toISOString().split('T')[0])
         .in('unit_code', units?.map(u => u.unit_code) || [])
+        .order('exam_date', { ascending: true })
 
-      if (examsError) throw examsError
+      if (examsError) console.error('Exams error:', examsError)
+
+      // Calculate days until next exam
+      let daysUntilNextExam: number | undefined
+      let nextExamUnit: string | undefined
+      
+      if (exams && exams.length > 0) {
+        const nextExam = exams[0]
+        const examDate = new Date(nextExam.exam_date)
+        const today = new Date()
+        const diffTime = examDate.getTime() - today.getTime()
+        daysUntilNextExam = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        nextExamUnit = nextExam.unit_code
+      }
 
       setStats({
         activeUnits: units?.length || 0,
         classesToday: todayClasses?.length || 0,
         upcomingExams: exams?.length || 0,
-        nextClass: todayClasses?.[0]?.unit_code
+        nextClass: todayClasses?.[0]?.unit_code,
+        daysUntilNextExam,
+        nextExamUnit
       })
     } catch (error) {
       console.error('Error loading stats:', error)
@@ -147,24 +170,42 @@ export default function Dashboard() {
         .select('unit_code')
         .eq('user_id', user?.id)
         .eq('is_active', true)
+        .eq('semester', profile.semester)
+        .eq('year', profile.year)
 
-      if (!units) return
+      if (!units || units.length === 0) {
+        console.log('No active units found for schedule')
+        return
+      }
 
-      const today = new Date().toLocaleDateString('en-US', { weekday: 'long' })
+      // Normalize day name to UPPERCASE to match database format
+      const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()
+      console.log('Loading schedule for:', today, 'Units:', units.map(u => u.unit_code))
+      
       const { data: schedule, error } = await supabase
         .from('master_timetables')
         .select('*')
         .eq('university_id', profile.university_id)
+        .eq('semester', profile.semester)
+        .eq('year', profile.year)
         .eq('day', today)
         .in('unit_code', units.map(u => u.unit_code))
         .order('time_start')
 
-      if (error) throw error
+      console.log('Schedule query result:', schedule?.length || 0, 'classes')
+      if (error) {
+        console.error('Schedule error:', error)
+        throw error
+      }
 
       const currentTime = new Date()
       const formattedSchedule = schedule?.map(item => {
-        const startTime = new Date(`${currentTime.toDateString()} ${item.time_start}`)
-        const endTime = new Date(`${currentTime.toDateString()} ${item.time_end}`)
+        // Handle time_start and time_end which might be in HH:MM:SS or HH:MM format
+        const timeStart = item.time_start || '00:00:00'
+        const timeEnd = item.time_end || '23:59:59'
+        
+        const startTime = new Date(`${currentTime.toDateString()} ${timeStart}`)
+        const endTime = new Date(`${currentTime.toDateString()} ${timeEnd}`)
         
         let status: "completed" | "upcoming" | "current" = "upcoming"
         if (currentTime > endTime) {
@@ -173,16 +214,21 @@ export default function Dashboard() {
           status = "current"
         }
 
+        // Format time for display (HH:MM)
+        const displayTimeStart = timeStart.slice(0, 5)
+        const displayTimeEnd = timeEnd.slice(0, 5)
+
         return {
-          time: `${item.time_start?.slice(0, 5)} - ${item.time_end?.slice(0, 5)}`,
+          time: `${displayTimeStart} - ${displayTimeEnd}`,
           unit_code: item.unit_code,
           unit_name: item.unit_name,
-          venue: item.venue,
-          lecturer: item.lecturer,
+          venue: item.venue || 'TBA',
+          lecturer: item.lecturer || 'TBA',
           status
         }
       }) || []
 
+      console.log('Formatted schedule:', formattedSchedule.length, 'classes')
       setTodaySchedule(formattedSchedule)
     } catch (error) {
       console.error('Error loading today schedule:', error)
@@ -290,12 +336,16 @@ export default function Dashboard() {
           >
             <Card className="card-gradient shadow-soft hover:shadow-elegant transition-smooth">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Upcoming Exams</CardTitle>
-                <Trophy className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Study Days</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.upcomingExams}</div>
-                <p className="text-xs text-muted-foreground">Next 30 days</p>
+                <div className="text-2xl font-bold">
+                  {stats.daysUntilNextExam !== undefined ? stats.daysUntilNextExam : '-'}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.nextExamUnit ? `Until ${stats.nextExamUnit} exam` : 'No upcoming exams'}
+                </p>
               </CardContent>
             </Card>
           </motion.div>
@@ -307,12 +357,12 @@ export default function Dashboard() {
           >
             <Card className="card-gradient shadow-soft hover:shadow-elegant transition-smooth">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Notifications</CardTitle>
-                <Bell className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Upcoming Exams</CardTitle>
+                <Trophy className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{notifications.length}</div>
-                <p className="text-xs text-muted-foreground">Unread messages</p>
+                <div className="text-2xl font-bold">{stats.upcomingExams}</div>
+                <p className="text-xs text-muted-foreground">Next 30 days</p>
               </CardContent>
             </Card>
           </motion.div>
