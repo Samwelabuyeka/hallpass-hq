@@ -21,6 +21,8 @@ import Files from "./pages/Files";
 import Notifications from "./pages/Notifications";
 import ClassRep from "./pages/ClassRep";
 import TimetableImport from "./pages/TimetableImport";
+import ChatPage from "./pages/Chat";
+import ConnectionsPage from "./pages/Connections";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +48,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Dashboard />} />
+      <Route path="/chat" element={<ChatPage />} />
+      <Route path="/connections" element={<ConnectionsPage />} />
       <Route path="/setup" element={<Setup />} />
       <Route path="/timetable" element={<Timetable />} />
       <Route path="/timetable-simple" element={<TimetableSimple />} />

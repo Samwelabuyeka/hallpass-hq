@@ -9,7 +9,9 @@ import {
   Bell,
   FileText,
   Files,
-  Crown
+  Crown,
+  MessageSquare,
+  Users as UsersIcon
 } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
 
@@ -28,6 +30,8 @@ import { cn } from "@/lib/utils"
 
 const mainItems = [
   { title: "Dashboard", url: "/", icon: Home },
+  { title: "Chat", url: "/chat", icon: MessageSquare },
+  { title: "Connections", url: "/connections", icon: UsersIcon },
   { title: "Setup", url: "/setup", icon: Settings },
   { title: "My Timetable", url: "/timetable", icon: Calendar },
   { title: "My Units", url: "/units", icon: BookOpen },
@@ -65,9 +69,7 @@ export function AppSidebar() {
     <Sidebar className="w-64">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg hero-gradient flex items-center justify-center">
-            <BookOpen className="h-5 w-5 text-white" />
-          </div>
+          <img src="/logo.svg" alt="MyStudent Logo" className="w-8 h-8" />
           <div>
             <h2 className="font-semibold text-sidebar-foreground">MyStudent</h2>
             <p className="text-xs text-sidebar-foreground/70">Student Portal</p>
