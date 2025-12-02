@@ -116,7 +116,7 @@ export function LoginForm() {
                 </div>
                 
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Signing in..." : "Sign In"}
+                  {loading ? "Logging in..." : "Login"}
                 </Button>
               </form>
             </TabsContent>
@@ -163,7 +163,7 @@ export function LoginForm() {
                       id="signup-password"
                       type={showPassword ? "text" : "password"}
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => setPassword(e.targe.value)}
                       placeholder="Create a password"
                       className="pl-9 pr-9"
                       required
@@ -186,7 +186,7 @@ export function LoginForm() {
                 </div>
                 
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account..." : "Sign Up"}
+                  {loading ? "Signing up..." : "Sign Up"}
                 </Button>
               </form>
             </TabsContent>

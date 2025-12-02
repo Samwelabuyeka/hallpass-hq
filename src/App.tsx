@@ -2,12 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AuthProvider, useAuth } from "@/components/auth/auth-provider";
 import { LoginForm } from "@/components/auth/login-form";
 import { CookieBanner } from "@/components/monetization/cookie-banner";
-import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Setup from "./pages/Setup";
 import Timetable from "./pages/Timetable";
@@ -23,12 +22,13 @@ import ClassRep from "./pages/ClassRep";
 import TimetableImport from "./pages/TimetableImport";
 import ChatPage from "./pages/Chat";
 import ConnectionsPage from "./pages/Connections";
+import { Registration } from "./pages/Registration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 function AppRoutes() {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
 
   if (loading) {
     return (
@@ -43,6 +43,16 @@ function AppRoutes() {
 
   if (!user) {
     return <LoginForm />;
+  }
+
+  // If user is logged in but has no course, redirect to registration
+  if (user && !profile?.course) {
+    return (
+      <Routes>
+        <Route path="/registration" element={<Registration />} />
+        <Route path="*" element={<Navigate to="/registration" />} />
+      </Routes>
+    );
   }
 
   return (
@@ -62,6 +72,7 @@ function AppRoutes() {
       <Route path="/class-rep" element={<ClassRep />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/timetable-import" element={<TimetableImport />} />
+      <Route path="/registration" element={<Registration />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

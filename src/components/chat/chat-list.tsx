@@ -1,4 +1,3 @@
-now 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { supabase } from "@/integrations/supabase/client";
