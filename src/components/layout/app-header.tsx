@@ -1,4 +1,4 @@
-import { Moon, Sun, Menu, Bell, User, LogOut } from "lucide-react"
+import { Moon, Sun, Menu, Bell, User, LogOut, Phone } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
@@ -27,6 +27,10 @@ export function AppHeader() {
 
   const handleProfileClick = () => {
     navigate('/profile')
+  }
+
+  const handleCallHistoryClick = () => {
+    navigate('/call-history')
   }
 
   return (
@@ -93,6 +97,10 @@ export function AppHeader() {
               <DropdownMenuItem onClick={handleProfileClick}>
                 <User className="mr-2 h-4 w-4" />
                 Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleCallHistoryClick}>
+                <Phone className="mr-2 h-4 w-4" />
+                Call History
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} className="text-destructive">

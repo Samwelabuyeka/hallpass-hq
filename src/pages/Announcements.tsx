@@ -3,71 +3,18 @@ import { AppLayout } from "@/components/layout/app-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { supabase } from "@/integrations/supabase/client"
-import { useAuth } from "@/components/auth/auth-provider"
-import { useToast } from "@/hooks/use-toast"
+import { useAnnouncements, Announcement } from "@/hooks/use-announcements"
 import { Megaphone, Search, Calendar } from "lucide-react"
 import { motion } from "framer-motion"
 
-interface Announcement {
-  id: string
-  title: string
-  message: string
-  type: string
-  unit_code?: string
-  created_at: string
-  sender_id: string
-  university_id: string
-}
-
 export default function Announcements() {
-  const { user } = useAuth()
-  const { toast } = useToast()
-  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const { announcements, loading } = useAnnouncements()
   const [filteredAnnouncements, setFilteredAnnouncements] = useState<Announcement[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    loadAnnouncements()
-  }, [user])
 
   useEffect(() => {
     filterAnnouncements()
   }, [searchQuery, announcements])
-
-  const loadAnnouncements = async () => {
-    if (!user) return
-
-    try {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('university_id')
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      if (profileError) throw profileError
-      if (!profile?.university_id) return
-
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('university_id', profile.university_id)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setAnnouncements(data || [])
-    } catch (error: any) {
-      console.error('Error loading announcements:', error)
-      toast({
-        title: "Error",
-        description: "Failed to load announcements",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const filterAnnouncements = () => {
     if (!searchQuery.trim()) {
@@ -78,24 +25,15 @@ export default function Announcements() {
     const query = searchQuery.toLowerCase()
     const filtered = announcements.filter(announcement =>
       announcement.title.toLowerCase().includes(query) ||
-      announcement.message.toLowerCase().includes(query) ||
-      announcement.unit_code?.toLowerCase().includes(query) ||
-      announcement.type.toLowerCase().includes(query)
+      announcement.content.toLowerCase().includes(query)
     )
     setFilteredAnnouncements(filtered)
   }
 
-  const getTypeColor = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'urgent':
-        return 'destructive'
-      case 'general':
-        return 'default'
-      case 'academic':
-        return 'secondary'
-      default:
-        return 'outline'
-    }
+  const getType = (announcement: Announcement) => {
+      if (announcement.course_id) return "Course";
+      if (announcement.university_id) return "University";
+      return "General";
   }
 
   if (loading) {
@@ -127,7 +65,7 @@ export default function Announcements() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search announcements by title, message, course code..."
+            placeholder="Search announcements by title, message..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -169,18 +107,13 @@ export default function Announcements() {
                         </CardDescription>
                       </div>
                       <div className="flex gap-2">
-                        <Badge variant={getTypeColor(announcement.type)}>
-                          {announcement.type}
-                        </Badge>
-                        {announcement.unit_code && (
-                          <Badge variant="outline">{announcement.unit_code}</Badge>
-                        )}
+                        <Badge>{getType(announcement)}</Badge>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {announcement.message}
+                      {announcement.content}
                     </p>
                   </CardContent>
                 </Card>

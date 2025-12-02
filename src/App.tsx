@@ -14,6 +14,7 @@ import TimetableSimple from "./pages/TimetableSimple";
 import Units from "./pages/Units";
 import Profile from "./pages/Profile";
 import Announcements from "./pages/Announcements";
+import CreateAnnouncement from "./pages/create-announcement";
 import Admin from "./pages/Admin";
 import Exams from "./pages/Exams";
 import Files from "./pages/Files";
@@ -22,6 +23,7 @@ import ClassRep from "./pages/ClassRep";
 import TimetableImport from "./pages/TimetableImport";
 import ChatPage from "./pages/Chat";
 import ConnectionsPage from "./pages/Connections";
+import { CallHistory } from "./pages/CallHistory";
 import { Registration } from "./pages/Registration";
 import NotFound from "./pages/NotFound";
 
@@ -60,6 +62,7 @@ function AppRoutes() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/chat" element={<ChatPage />} />
       <Route path="/connections" element={<ConnectionsPage />} />
+      <Route path="/call-history" element={<CallHistory />} />
       <Route path="/setup" element={<Setup />} />
       <Route path="/timetable" element={<Timetable />} />
       <Route path="/timetable-simple" element={<TimetableSimple />} />
@@ -67,6 +70,7 @@ function AppRoutes() {
       <Route path="/exams" element={<Exams />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/announcements" element={<Announcements />} />
+      <Route path="/announcements/create" element={<CreateAnnouncement />} />
       <Route path="/files" element={<Files />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/class-rep" element={<ClassRep />} />

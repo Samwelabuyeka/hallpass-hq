@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react"
+
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,7 +10,7 @@ import { AppLayout } from "@/components/layout/app-layout"
 import { useAuth } from "@/components/auth/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
-import { User, Mail, School, Hash, Calendar, Save } from "lucide-react"
+import { User, Mail, School, Hash, Calendar, Save, Upload, Loader2 } from "lucide-react"
 
 interface Profile {
   id: string
@@ -21,6 +22,7 @@ interface Profile {
   semester: number | null
   year: number | null
   is_admin: boolean
+  avatar_url: string | null;
   created_at: string
   updated_at: string
 }
@@ -32,11 +34,14 @@ interface University {
 }
 
 export default function Profile() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, updateProfile } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [universities, setUniversities] = useState<University[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast()
 
   useEffect(() => {
@@ -45,6 +50,18 @@ export default function Profile() {
       loadUniversities()
     }
   }, [user])
+
+  useEffect(() => {
+    if (avatarFile) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(avatarFile);
+    } else {
+      setAvatarPreview(null);
+    }
+  }, [avatarFile]);
 
   const loadProfile = async () => {
     try {
@@ -84,39 +101,19 @@ export default function Profile() {
   }
 
   const handleSave = async () => {
-    if (!profile) return
+    if (!profile || !profile.full_name) return;
 
-    setSaving(true)
+    setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: profile.full_name,
-          university_id: profile.university_id,
-          student_id: profile.student_id,
-          semester: profile.semester,
-          year: profile.year,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', profile.user_id)
-
-      if (error) throw error
-
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been saved successfully",
-      })
-    } catch (error: any) {
-      console.error('Error saving profile:', error)
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save profile",
-        variant: "destructive",
-      })
+      await updateProfile(profile.full_name, avatarFile || undefined);
+    } catch (error) {
+      // Error is already handled by the auth provider's toast
     } finally {
-      setSaving(false)
+      setSaving(false);
+      setAvatarFile(null);
     }
-  }
+  };
+
 
   const handleSignOut = async () => {
     try {
@@ -174,17 +171,28 @@ export default function Profile() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src="" />
-                  <AvatarFallback className="text-lg">
+              <div className="flex items-center gap-6">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={avatarPreview || profile.avatar_url || undefined} />
+                  <AvatarFallback className="text-2xl">
                     {profile.full_name?.split(' ').map(n => n[0]).join('') ||
                      profile.email.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="space-y-1">
-                  <h3 className="font-medium">{profile.full_name || "No name set"}</h3>
-                  <p className="text-sm text-muted-foreground">{profile.email}</p>
+                <div className="space-y-2">
+                  <Label>Profile Picture</Label>
+                  <Input 
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      ref={avatarInputRef}
+                      onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                  />
+                  <Button variant="outline" onClick={() => avatarInputRef.current?.click()}>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Change Avatar
+                  </Button>
+                   <p className="text-xs text-muted-foreground">JPG, GIF or PNG. 1MB max.</p>
                 </div>
               </div>
 
@@ -279,7 +287,11 @@ export default function Profile() {
 
           <div className="flex gap-4">
             <Button onClick={handleSave} disabled={saving} className="flex-1">
-              <Save className="mr-2 h-4 w-4" />
+              {saving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
               {saving ? "Saving..." : "Save Changes"}
             </Button>
             <Button variant="destructive" onClick={handleSignOut}>

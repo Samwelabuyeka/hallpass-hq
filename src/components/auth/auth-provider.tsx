@@ -10,6 +10,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<void>
+  updateProfile: (fullName: string, avatarFile?: File) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -112,6 +113,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error
   }
 
+  const updateProfile = async (fullName: string, avatarFile?: File) => {
+    if (!user) return
+
+    try {
+      let avatarUrl = user.user_metadata.avatar_url
+
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split('.').pop()
+        const fileName = `${user.id}.${fileExt}`
+        const filePath = `avatars/${fileName}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, avatarFile, { upsert: true })
+
+        if (uploadError) throw uploadError
+
+        const { data } = supabase.storage.from('avatars').getPublicUrl(filePath)
+        avatarUrl = data.publicUrl
+      }
+
+      const { error } = await supabase.from('profiles').upsert({ 
+        id: user.id,
+        full_name: fullName,
+        avatar_url: avatarUrl,
+      })
+
+      if (error) throw error
+
+      // Refresh the user data
+      const { data: { user: updatedUser } } = await supabase.auth.refreshSession()
+      if(updatedUser) setUser(updatedUser)
+
+
+      toast({ title: 'Profile updated successfully' })
+    } catch (error: any) {
+      toast({
+        title: 'Error updating profile',
+        description: error.message,
+        variant: 'destructive',
+      })
+    }
+  }
+
   const value = {
     user,
     session,
@@ -119,6 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signIn,
     signOut,
+    updateProfile,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
