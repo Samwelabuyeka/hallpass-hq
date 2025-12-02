@@ -1,6 +1,6 @@
+
 import { Moon, Sun, Menu, Bell, User, LogOut, Phone } from "lucide-react"
 import { useTheme } from "next-themes"
-
 import { Button } from "@/components/ui/button"
 import { 
   DropdownMenu, 
@@ -14,12 +14,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useAuth } from "@/components/auth/auth-provider"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, NavLink } from "react-router-dom"
+import { useNotifications } from "@/hooks/use-notifications"
 
 export function AppHeader() {
   const { theme, setTheme } = useTheme()
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const { unreadCount } = useNotifications();
 
   const handleSignOut = async () => {
     await signOut()
@@ -62,23 +64,27 @@ export function AppHeader() {
           </Button>
 
           {/* Notifications */}
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative">
-            <Bell className="h-4 w-4" />
-            <Badge 
-              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
-              variant="destructive"
-            >
-              3
-            </Badge>
-          </Button>
+          <NavLink to="/notifications">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative">
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <Badge 
+                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
+                  variant="destructive"
+                >
+                  {unreadCount}
+                </Badge>
+              )}
+            </Button>
+          </NavLink>
 
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder-avatar.jpg" alt="Student" />
-                  <AvatarFallback>ST</AvatarFallback>
+                  <AvatarImage src={user?.user_metadata?.avatar_url} />
+                  <AvatarFallback>{user?.user_metadata?.full_name?.split(' ').map((n: string) => n[0]).join('') || 'ST'}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>

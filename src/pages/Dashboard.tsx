@@ -3,9 +3,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { UserOnboarding } from "@/components/onboarding/user-onboarding";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { StudentDashboard } from "./student-dashboard";
-import { LecturerDashboard } from "./lecturer-dashboard";
-import { AdminDashboard } from "./admin-dashboard";
+import { LecturerDashboard } from "./LecturerDashboard";
 import { StoryReel, Story } from "@/components/stories/StoryReel";
 import { StoryViewer } from "@/components/stories/StoryViewer";
 import { useDashboard } from "@/hooks/use-dashboard";
@@ -76,7 +74,11 @@ const StudentDashboard = ({ profile }) => {
   );
 };
 
-export function Dashboard() {
+const AdminDashboard = () => {
+  return <div>Welcome, Admin!</div>;
+};
+
+function Dashboard() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -146,3 +148,5 @@ export function Dashboard() {
       </div>
   )
 }
+
+export default Dashboard;
