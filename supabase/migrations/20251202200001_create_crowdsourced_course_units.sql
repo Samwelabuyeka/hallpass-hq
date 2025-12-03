@@ -50,6 +50,3 @@ CREATE POLICY "Admins or creator can manage units in a set" ON public.course_uni
    FROM public.course_unit_sets cs
    JOIN public.profiles p ON cs.created_by = p.user_id
   WHERE ((cs.id = course_unit_set_units.unit_set_id) AND ((p.is_admin = true) OR (cs.created_by = auth.uid()))))));
-
--- Update profiles table to link to a course
-ALTER TABLE public.profiles ADD COLUMN course_id UUID REFERENCES public.courses(id);

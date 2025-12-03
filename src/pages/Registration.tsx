@@ -15,6 +15,7 @@ export function Registration() {
   const [loading, setLoading] = useState(false);
   const [course, setCourse] = useState('');
   const [combination, setCombination] = useState('');
+  const [academicYear, setAcademicYear] = useState<number | ''>('');
   const [isEducation, setIsEducation] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
 
@@ -23,7 +24,7 @@ export function Registration() {
       if (!user) return;
       const { data, error } = await supabase
         .from('profiles')
-        .select('university_id, year, semester')
+        .select('university_id, year, semester, academic_year')
         .eq('user_id', user.id)
         .single();
       
@@ -32,6 +33,9 @@ export function Registration() {
         navigate('/setup');
       } else {
         setUserProfile(data);
+        if (data.academic_year) {
+          setAcademicYear(data.academic_year);
+        }
       }
     };
     fetchProfile();
@@ -48,7 +52,7 @@ export function Registration() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !userProfile || !course) {
+    if (!user || !userProfile || !course || !academicYear) {
       toast.error('Missing information', { description: 'Please fill in all required fields.' });
       return;
     }
@@ -80,10 +84,10 @@ export function Registration() {
         
         const courseId = courseData.id;
 
-        // Update user's profile with course_id
+        // Update user's profile with course_id and academic_year
         const { error: profileUpdateError } = await supabase
             .from('profiles')
-            .update({ course_id: courseId })
+            .update({ course_id: courseId, academic_year: academicYear })
             .eq('user_id', user.id);
 
         if (profileUpdateError) throw profileUpdateError;
@@ -119,7 +123,7 @@ export function Registration() {
         } else {
             // If no set exists, redirect to the unit selection page
             toast.info('Define Your Units', { description: 'You are the first to register for this course/combination. Please select your units.' });
-            navigate('/unit-selection', { state: { courseId, combination: combinationName } });
+            navigate('/unit-selection', { state: { courseId, combination: combinationName, academicYear } });
         }
 
     } catch (error: any) {
@@ -147,6 +151,18 @@ export function Registration() {
                 value={course}
                 onChange={handleCourseChange}
                 placeholder="e.g., Computer Science"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="academicYear">Academic Year</Label>
+              <Input
+                id="academicYear"
+                type="number"
+                value={academicYear}
+                onChange={(e) => setAcademicYear(parseInt(e.target.value, 10))}
+                placeholder="e.g., 1, 2, 3"
                 required
               />
             </div>

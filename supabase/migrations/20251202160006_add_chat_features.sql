@@ -105,7 +105,7 @@ ALTER TABLE ONLY public.calls
 ALTER TABLE ONLY public.calls
     ADD CONSTRAINT calls_caller_id_fkey FOREIGN KEY (caller_id) REFERENCES public.profiles(user_id) ON UPDATE CASCADE ON DELETE CASCADE;
 ALTER TABLE public.calls
-    ADD CONSTRAINT calls_chat_id_fkey FOREIGN KEY (chat_id) REFERENCES public.chats(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ADD CONSTRAINT calls_chat_id_fkey FOREIGN KEY (chat_id) REFERENCES public.chats(.id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 -- Create the call_participants table
 CREATE TABLE public.call_participants (

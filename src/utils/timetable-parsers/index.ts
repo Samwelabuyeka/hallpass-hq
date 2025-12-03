@@ -1,31 +1,27 @@
+
 import * as XLSX from 'xlsx';
 import { ParserConfig, ParseResult } from './parser-types';
 import { gridFormatParser } from './grid-format-parser';
 import { listFormatParser } from './list-format-parser';
 import { examFormatParser } from './exam-format-parser';
 
-// Register all universal parsers
-const PARSERS: ParserConfig[] = [
-  gridFormatParser,   // Handles all grid formats (including KFU)
-  listFormatParser,   // Handles row-per-class formats
-  examFormatParser,   // Handles exam timetables
+const ALL_PARSERS: ParserConfig[] = [
+  gridFormatParser,   
+  listFormatParser,   
+  examFormatParser,   
 ];
 
-/**
- * Intelligent timetable parser that automatically detects and uses the appropriate format parser
- */
+
 export class TimetableParser {
-  /**
-   * Parse a timetable file with automatic format detection
-   */
+  
   static async parseFile(
     file: File,
     semester: number,
     year: number,
-    universityId: string
+    universityId: string,
+    parsersToUse?: string[]
   ): Promise<ParseResult> {
     try {
-      // Read the file
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -38,8 +34,11 @@ export class TimetableParser {
         };
       }
 
-      // Try each parser until one succeeds
-      for (const parser of PARSERS) {
+      const parsers = parsersToUse
+        ? ALL_PARSERS.filter(p => parsersToUse.includes(p.name))
+        : ALL_PARSERS;
+
+      for (const parser of parsers) {
         try {
           if (parser.detect(jsonData)) {
             console.log(`Detected format: ${parser.name}`);
@@ -58,7 +57,6 @@ export class TimetableParser {
           }
         } catch (error) {
           console.error(`Parser ${parser.name} failed:`, error);
-          // Continue to next parser
         }
       }
 
@@ -76,19 +74,13 @@ export class TimetableParser {
     }
   }
 
-  /**
-   * Get list of available parsers with their descriptions
-   */
   static getAvailableParsers(): Array<{ name: string; description: string }> {
-    return PARSERS.map(p => ({
+    return ALL_PARSERS.map(p => ({
       name: p.name,
       description: p.description
     }));
   }
 
-  /**
-   * Download a template file for a specific format
-   */
   static downloadTemplate(formatName: string) {
     const templateData: { [key: string]: any[][] } = {
       'Grid Format (Days as Columns)': [

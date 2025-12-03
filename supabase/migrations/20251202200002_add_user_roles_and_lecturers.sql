@@ -35,6 +35,7 @@ CREATE POLICY "Admins can manage all lecturer course links" ON public.lecturer_c
 
 -- Update the class representative application policy to ensure only students can apply
 DROP POLICY IF EXISTS "Users can insert their own applications" ON public.class_rep_applications;
+DROP POLICY IF EXISTS "Students can insert their own applications" ON public.class_rep_applications;
 
 CREATE POLICY "Students can insert their own applications" ON public.class_rep_applications
   FOR INSERT WITH CHECK (

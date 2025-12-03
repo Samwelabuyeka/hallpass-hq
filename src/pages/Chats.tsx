@@ -3,25 +3,14 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { supabase } from '@/integrations/supabase/client';
 import { ChatMessages } from '@/components/messaging/ChatMessages';
-import { ChatList } from '@/components/messaging/ChatList';
-import { Button } from '@/components/ui/button';
-import { CreateGroupChatDialog } from '@/components/messaging/CreateGroupChatDialog';
-
-export type Chat = {
-  id: string;
-  type: 'direct' | 'group' | 'course_channel';
-  name: string | null;
-  course_id: string | null;
-  participants: { user_id: string; profile: { full_name: string; avatar_url: string } }[];
-};
+import { ChatSidebar } from '@/components/messaging/ChatSidebar';
+import { Chat, getChatDisplayName } from '@/lib/chat-helpers';
 
 export function Chats() {
   const { user } = useAuth();
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isCreateGroupOpen, setCreateGroupOpen] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'direct' | 'group' | 'course_channel'>('direct');
 
   useEffect(() => {
     if (!user) return;
@@ -31,7 +20,7 @@ export function Chats() {
       const { data, error } = await supabase
         .from('chats')
         .select(`
-          id, name, type, course_id,
+          id, name, type, course_id, last_message_at,
           participants:chat_participants!inner(
             user_id,
             profile:profiles(full_name, avatar_url)
@@ -39,7 +28,8 @@ export function Chats() {
         `)
         .in('id', 
           supabase.from('chat_participants').select('chat_id').eq('user_id', user.id)
-        );
+        )
+        .order('last_message_at', { ascending: false, nulls: 'last' });
 
       if (error) {
         console.error('Error fetching chats:', error);
@@ -50,55 +40,40 @@ export function Chats() {
     };
 
     fetchChats();
+
+    const subscription = supabase
+        .channel('public:chats')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, fetchChats)
+        .subscribe();
+
+    return () => {
+        supabase.removeChannel(subscription);
+    };
   }, [user]);
-
-  const getChatDisplayName = (chat: Chat) => {
-    if (chat.type === 'course_channel') {
-      return chat.name || 'Course Channel';
-    }
-    if (chat.type === 'group') {
-        return chat.name || 'Group Chat';
-    }
-    // For direct chats
-    const otherParticipant = chat.participants.find(p => p.user_id !== user?.id);
-    return otherParticipant?.profile.full_name || 'Direct Message';
-  };
-
-  const filteredChats = chats.filter(chat => chat.type === currentTab);
 
   return (
     <div className="flex h-screen bg-background text-foreground">
-      <aside className="w-1/4 border-r border-border flex flex-col">
-        <div className="p-4 border-b border-border">
-            <h2 className="text-xl font-semibold">Conversations</h2>
-            <Button className="w-full mt-4" onClick={() => setCreateGroupOpen(true)}>Create Group Chat</Button>
+        <div className="w-full md:w-1/3 lg:w-1/4 border-r border-border flex flex-col">
+            <ChatSidebar 
+                chats={chats}
+                activeChat={activeChat}
+                onSelectChat={setActiveChat}
+                loading={loading}
+            />
         </div>
 
-        <div className="flex justify-around p-2 border-b">
-            <Button variant={currentTab === 'direct' ? 'secondary' : 'ghost'} onClick={() => setCurrentTab('direct')}>Direct</Button>
-            <Button variant={currentTab === 'group' ? 'secondary' : 'ghost'} onClick={() => setCurrentTab('group')}>Groups</Button>
-            <Button variant={currentTab === 'course_channel' ? 'secondary' : 'ghost'} onClick={() => setCurrentTab('course_channel')}>Courses</Button>
-        </div>
-        
-        <ChatList 
-          chats={filteredChats}
-          activeChat={activeChat}
-          onSelectChat={setActiveChat}
-          getChatDisplayName={getChatDisplayName}
-          loading={loading}
-        />
-      </aside>
-
-      <main className="w-3/4 flex flex-col">
+      <main className="hidden md:flex flex-1 flex-col">
         {activeChat ? (
-          <ChatMessages chat={activeChat} getChatDisplayName={getChatDisplayName} />
+          <ChatMessages 
+            chat={activeChat} 
+            getChatDisplayName={(chat) => getChatDisplayName(chat, user?.id || '')} 
+          />
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <p className="text-muted-foreground">Select a conversation to start chatting</p>
           </div>
         )}
       </main>
-      <CreateGroupChatDialog isOpen={isCreateGroupOpen} onClose={() => setCreateGroupOpen(false)} />
     </div>
   );
 }

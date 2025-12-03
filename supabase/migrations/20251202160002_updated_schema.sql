@@ -20,6 +20,7 @@ CREATE TABLE public.profiles (
   email TEXT,
   semester INTEGER,
   year INTEGER,
+  academic_year INTEGER,
   is_admin BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()

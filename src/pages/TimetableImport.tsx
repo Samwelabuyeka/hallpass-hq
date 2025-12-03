@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ export default function TimetableImport() {
   const [semester, setSemester] = useState<string>("1");
   const [year, setYear] = useState<string>(new Date().getFullYear().toString());
 
-  const handleImport = async (file: File) => {
+  const handleImport = async (file: File, isExam: boolean) => {
     if (!selectedUniversity) {
       toast.error('Please select a university');
       return;
@@ -29,21 +30,22 @@ export default function TimetableImport() {
     setProgress("Reading and analyzing file format...");
     
     try {
-      // Use intelligent parser
+      const timetableType = isExam ? 'exam' : 'class';
       const parseResult = await TimetableParser.parseFile(
         file,
         parseInt(semester),
         parseInt(year),
-        selectedUniversity
+        selectedUniversity,
+        isExam ? ['Exam Format'] : ['Grid Format (Days as Columns)', 'List Format (Row per Class)']
       );
       
       if (!parseResult.success || !parseResult.data) {
-        throw new Error(parseResult.error || 'Failed to parse timetable');
+        throw new Error(parseResult.error || `Failed to parse ${timetableType} timetable`);
       }
       
       const { entries, units } = parseResult.data;
       
-      setProgress(`✓ Detected format: ${parseResult.parserUsed}\nFound ${units.size} units and ${entries.length} timetable entries. Importing to database...`);
+      setProgress(`✓ Detected format: ${parseResult.parserUsed}\\nFound ${units.size} units and ${entries.length} timetable entries. Importing to database...`);
 
       // Import units first
       const unitsArray = Array.from(units.values()).map(u => ({
@@ -56,7 +58,6 @@ export default function TimetableImport() {
         credits: 3
       }));
 
-      // Avoid duplicates without requiring a DB unique constraint
       const { data: existing, error: existingErr } = await supabase
         .from('master_units')
         .select('unit_code')
@@ -71,65 +72,65 @@ export default function TimetableImport() {
       const existingCodes = new Set((existing || []).map((e: any) => e.unit_code));
       const newUnits = unitsArray.filter(u => !existingCodes.has(u.unit_code));
 
-      const { error: unitsError } = newUnits.length
-        ? await supabase.from('master_units').insert(newUnits)
-        : { error: null } as any;
-
-      if (unitsError) {
-        console.error("Units import error:", unitsError);
-        const msg = (unitsError as any).message?.toLowerCase?.() || '';
-        if (msg.includes('row-level') || msg.includes('rls') || msg.includes('permission')) {
-          toast.error('Import blocked by permissions. Admin access required to import timetables.');
-          setImporting(false);
-          return;
+      if (newUnits.length > 0) {
+        const { error: unitsError } = await supabase.from('master_units').insert(newUnits);
+        if (unitsError) {
+            handleImportError(unitsError, 'units');
+            return;
         }
-        throw new Error(`Failed to import units: ${unitsError.message}`);
       }
 
       setProgress(`Imported ${unitsArray.length} units. Now importing timetable entries...`);
 
+      const timetableEntries = entries.map(entry => ({ ...entry, type: timetableType }));
+
       // Import timetable entries in batches
       const batchSize = 100;
-      for (let i = 0; i < entries.length; i += batchSize) {
-        const batch = entries.slice(i, i + batchSize);
+      for (let i = 0; i < timetableEntries.length; i += batchSize) {
+        const batch = timetableEntries.slice(i, i + batchSize);
         const { error: timetableError } = await supabase
           .from('master_timetables')
           .insert(batch);
 
         if (timetableError) {
-          console.error("Timetable import error:", timetableError);
-          const msg = (timetableError as any).message?.toLowerCase?.() || '';
-          if (msg.includes('row-level') || msg.includes('rls') || msg.includes('permission')) {
-            toast.error('Import blocked by permissions. Admin access required to import timetables.');
-            setImporting(false);
+            handleImportError(timetableError, 'timetable entries');
             return;
-          }
-          throw new Error(`Failed to import timetable entries: ${timetableError.message}`);
         }
 
-        setProgress(`Imported ${Math.min(i + batchSize, entries.length)} of ${entries.length} timetable entries...`);
+        setProgress(`Imported ${Math.min(i + batchSize, timetableEntries.length)} of ${timetableEntries.length} timetable entries...`);
       }
 
       setResults({
         units: unitsArray.length,
-        timetables: entries.length,
+        timetables: timetableEntries.length,
         parser: parseResult.parserUsed || 'Unknown'
       });
 
-      toast.success("Timetable imported successfully!");
+      toast.success(`${isExam ? 'Exam timetable' : 'Timetable'} imported successfully!`);
       
     } catch (error) {
       console.error("Import error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to import timetable");
+      toast.error(error instanceof Error ? error.message : `Failed to import ${isExam ? 'exam timetable' : 'timetable'}`);
     } finally {
       setImporting(false);
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportError = (error: any, type: string) => {
+    console.error(`${type} import error:`, error);
+    const msg = error.message?.toLowerCase?.() || '';
+    if (msg.includes('row-level') || msg.includes('rls') || msg.includes('permission')) {
+      toast.error(`Import blocked by permissions. Admin access required to import ${type}.`);
+    } else {
+      toast.error(`Failed to import ${type}: ${error.message}`);
+    }
+    setImporting(false);
+  }
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, isExam: boolean) => {
     const file = event.target.files?.[0];
     if (file) {
-      handleImport(file);
+      handleImport(file, isExam);
     }
   };
   
@@ -210,7 +211,7 @@ export default function TimetableImport() {
               <input
                 type="file"
                 accept=".xlsx,.xls,.xlsm"
-                onChange={handleFileUpload}
+                onChange={(e) => handleFileUpload(e, false)}
                 disabled={importing}
                 className="hidden"
                 id="file-upload"
@@ -219,7 +220,23 @@ export default function TimetableImport() {
                 <Button disabled={importing} asChild>
                   <span>
                     <Upload className="mr-2 h-4 w-4" />
-                    {importing ? "Importing..." : "Upload Timetable File"}
+                    {importing ? "Importing..." : "Upload Class Timetable"}
+                  </span>
+                </Button>
+              </label>
+              <input
+                type="file"
+                accept=".xlsx,.xls,.xlsm"
+                onChange={(e) => handleFileUpload(e, true)}
+                disabled={importing}
+                className="hidden"
+                id="exam-file-upload"
+              />
+              <label htmlFor="exam-file-upload">
+                <Button disabled={importing} asChild variant="outline">
+                  <span>
+                    <Upload className="mr-2 h-4 w-4" />
+                    {importing ? "Importing..." : "Upload Exam Timetable"}
                   </span>
                 </Button>
               </label>
@@ -228,7 +245,7 @@ export default function TimetableImport() {
             {progress && (
               <div className="p-4 bg-primary/10 rounded-lg flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-primary mt-0.5" />
-                <p className="text-sm">{progress}</p>
+                <p className="text-sm whitespace-pre-wrap">{progress}</p>
               </div>
             )}
 
@@ -276,7 +293,7 @@ export default function TimetableImport() {
                   Template
                 </Button>
               </div>
-            ))}
+            ))}\
             
             <div className="pt-4 border-t space-y-2 text-sm text-muted-foreground">
               <p className="font-medium text-foreground">How it works:</p>
