@@ -1,0 +1,127 @@
+[{
+	"resource": "/home/user/hallpass-hq/src/pages/Dashboard.tsx",
+	"owner": "typescript",
+	"code": "1261",
+	"severity": 8,
+	"message": "Already included file name '/home/user/hallpass-hq/src/pages/lecturerdashboard.tsx' differs from file name '/home/user/hallpass-hq/src/pages/LecturerDashboard.tsx' only in casing.\n  The file is in the program because:\n    Imported via \"./lecturerdashboard\" from file '/home/user/hallpass-hq/src/pages/Dashboard.tsx'\n    Matched by include pattern 'src' in '/home/user/hallpass-hq/tsconfig.app.json'\n    Matched by include pattern 'src' in '/home/user/hallpass-hq/tsconfig.app.json'",
+	"source": "ts",
+	"startLineNumber": 2,
+	"startColumn": 31,
+	"endLineNumber": 2,
+	"endColumn": 52,
+	"relatedInformation": [
+		{
+			"startLineNumber": 29,
+			"startColumn": 15,
+			"endLineNumber": 29,
+			"endColumn": 20,
+			"message": "File is matched by include pattern specified here.",
+			"resource": "/home/user/hallpass-hq/tsconfig.app.json"
+		},
+		{
+			"startLineNumber": 29,
+			"startColumn": 15,
+			"endLineNumber": 29,
+			"endColumn": 20,
+			"message": "File is matched by include pattern specified here.",
+			"resource": "/home/user/hallpass-hq/tsconfig.app.json"
+		}
+	]
+}][{
+	"resource": "/home/user/hallpass-hq/src/pages/lecturerdashboard.tsx",
+	"owner": "typescript",
+	"code": "2769",
+	"severity": 8,
+	"message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"class_reps\" | \"universities\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"courses\"' is not assignable to parameter of type '\"class_reps\" | \"universities\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\"'.\n  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: \"13.0.5\"; }, { Tables: { class_reps: { Row: { created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; }; Insert: { ...; }; Update: { ...; }; Relationships: [...]; }; ... 10 more ...; universities: { ...; }; }; Views: {}; Functions: { ...; }; Enums: {}; CompositeTypes: {}; }, never, never, never>', gave the following error.\n    Argument of type '\"courses\"' is not assignable to parameter of type 'never'.",
+	"source": "ts",
+	"startLineNumber": 26,
+	"startColumn": 15,
+	"endLineNumber": 26,
+	"endColumn": 24
+},{
+	"resource": "/home/user/hallpass-hq/src/pages/lecturerdashboard.tsx",
+	"owner": "typescript",
+	"code": "2352",
+	"severity": 8,
+	"message": "Conversion of type '({ created_at: string; email: string; full_name: string; id: string; is_admin: boolean; semester: number; student_id: string; university_id: string; updated_at: string; user_id: string; year: number; } | ... 10 more ... | { ...; })[]' to type 'Course[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.\n  Type '{ created_at: string; email: string; full_name: string; id: string; is_admin: boolean; semester: number; student_id: string; university_id: string; updated_at: string; user_id: string; year: number; } | ... 10 more ... | { ...; }' is not comparable to type 'Course'.\n    Property 'description' is missing in type '{ code: string; country: string; created_at: string; id: string; is_active: boolean; logo_url: string; name: string; updated_at: string; }' but required in type 'Course'.",
+	"source": "ts",
+	"startLineNumber": 33,
+	"startColumn": 20,
+	"endLineNumber": 33,
+	"endColumn": 36,
+	"relatedInformation": [
+		{
+			"startLineNumber": 16,
+			"startColumn": 3,
+			"endLineNumber": 16,
+			"endColumn": 14,
+			"message": "'description' is declared here.",
+			"resource": "/home/user/hallpass-hq/src/pages/lecturerdashboard.tsx"
+		}
+	]
+},{
+	"resource": "/home/user/hallpass-hq/src/pages/lecturerdashboard.tsx",
+	"owner": "typescript",
+	"code": "2345",
+	"severity": 8,
+	"message": "Argument of type '\"create_or_get_chat_with_class_rep\"' is not assignable to parameter of type '\"search_units_fuzzy\"'.",
+	"source": "ts",
+	"startLineNumber": 42,
+	"startColumn": 58,
+	"endLineNumber": 42,
+	"endColumn": 93
+}][{
+	"resource": "/home/user/hallpass-hq/src/pages/LecturerDashboard.tsx",
+	"owner": "typescript",
+	"code": "2589",
+	"severity": 8,
+	"message": "Type instantiation is excessively deep and possibly infinite.",
+	"source": "ts",
+	"startLineNumber": 25,
+	"startColumn": 37,
+	"endLineNumber": 28,
+	"endColumn": 38
+},{
+	"resource": "/home/user/hallpass-hq/src/pages/LecturerDashboard.tsx",
+	"owner": "typescript",
+	"code": "2769",
+	"severity": 8,
+	"message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"class_reps\" | \"universities\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"courses\"' is not assignable to parameter of type '\"class_reps\" | \"universities\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\"'.\n  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: \"13.0.5\"; }, { Tables: { class_reps: { Row: { created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; }; Insert: { ...; }; Update: { ...; }; Relationships: [...]; }; ... 10 more ...; universities: { ...; }; }; Views: {}; Functions: { ...; }; Enums: {}; CompositeTypes: {}; }, never, never, never>', gave the following error.\n    Argument of type '\"courses\"' is not assignable to parameter of type 'never'.",
+	"source": "ts",
+	"startLineNumber": 26,
+	"startColumn": 15,
+	"endLineNumber": 26,
+	"endColumn": 24
+},{
+	"resource": "/home/user/hallpass-hq/src/pages/LecturerDashboard.tsx",
+	"owner": "typescript",
+	"code": "2352",
+	"severity": 8,
+	"message": "Conversion of type '({ created_at: string; email: string; full_name: string; id: string; is_admin: boolean; semester: number; student_id: string; university_id: string; updated_at: string; user_id: string; year: number; } | ... 10 more ... | { ...; })[]' to type 'Course[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.\n  Type '{ created_at: string; email: string; full_name: string; id: string; is_admin: boolean; semester: number; student_id: string; university_id: string; updated_at: string; user_id: string; year: number; } | ... 10 more ... | { ...; }' is not comparable to type 'Course'.\n    Property 'description' is missing in type '{ code: string; country: string; created_at: string; id: string; is_active: boolean; logo_url: string; name: string; updated_at: string; }' but required in type 'Course'.",
+	"source": "ts",
+	"startLineNumber": 33,
+	"startColumn": 20,
+	"endLineNumber": 33,
+	"endColumn": 36,
+	"relatedInformation": [
+		{
+			"startLineNumber": 16,
+			"startColumn": 3,
+			"endLineNumber": 16,
+			"endColumn": 14,
+			"message": "'description' is declared here.",
+			"resource": "/home/user/hallpass-hq/src/pages/LecturerDashboard.tsx"
+		}
+	]
+},{
+	"resource": "/home/user/hallpass-hq/src/pages/LecturerDashboard.tsx",
+	"owner": "typescript",
+	"code": "2345",
+	"severity": 8,
+	"message": "Argument of type '\"create_or_get_chat_with_class_rep\"' is not assignable to parameter of type '\"search_units_fuzzy\"'.",
+	"source": "ts",
+	"startLineNumber": 42,
+	"startColumn": 58,
+	"endLineNumber": 42,
+	"endColumn": 93
+}]

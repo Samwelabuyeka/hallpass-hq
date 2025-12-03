@@ -1,3 +1,6 @@
+DROP TABLE IF EXISTS public.course_unit_set_units CASCADE;
+DROP TABLE IF EXISTS public.course_unit_sets CASCADE;
+DROP TABLE IF EXISTS public.courses CASCADE;
 
 -- Create courses table to store course names
 CREATE TABLE public.courses (

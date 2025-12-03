@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS public.lecturer_courses CASCADE;
 
 -- First, create a user_role type if it doesn't exist
 DO $$

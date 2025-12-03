@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS public.announcements CASCADE;
+DROP TABLE IF EXISTS public.notifications CASCADE;
 
 -- Create announcements table
 CREATE TABLE public.announcements (

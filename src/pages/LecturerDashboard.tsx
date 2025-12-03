@@ -16,7 +16,7 @@ interface Course {
   description: string;
 }
 
-export function LecturerDashboard({ profile }: LecturerDashboardProps) {
+function LecturerDashboard({ profile }: LecturerDashboardProps) {
   const [courses, setCourses] = useState<Course[]>([]);
   const navigate = useNavigate();
 
@@ -25,7 +25,7 @@ export function LecturerDashboard({ profile }: LecturerDashboardProps) {
       const { data, error } = await supabase
         .from('courses')
         .select('*')
-        .eq('created_by', profile.user_id);
+        .eq('created_by', profile.id);
 
       if (error) {
         console.error('Error fetching courses:', error);
@@ -35,7 +35,7 @@ export function LecturerDashboard({ profile }: LecturerDashboardProps) {
     };
 
     fetchCourses();
-  }, [profile.user_id]);
+  }, [profile.id]);
 
   const handleMessageClassRep = async (courseId: string) => {
     try {
@@ -82,3 +82,5 @@ export function LecturerDashboard({ profile }: LecturerDashboardProps) {
     </div>
   );
 }
+
+export default LecturerDashboard;

@@ -1,9 +1,10 @@
+DROP TABLE IF EXISTS public.calls CASCADE;
 
 -- Create calls table
 CREATE TABLE public.calls (
     id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
-    chat_id uuid NOT NULL REFERENCES public.chats(id) ON DELETE CASCADE,
+    chat_id bigint NOT NULL REFERENCES public.chats(id) ON DELETE CASCADE,
     caller_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     receiver_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     call_type text NOT NULL, -- 'audio' or 'video'

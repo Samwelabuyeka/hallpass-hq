@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS public.class_rep_applications CASCADE;
 
 CREATE TABLE public.class_rep_applications (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,

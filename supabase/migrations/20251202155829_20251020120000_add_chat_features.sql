@@ -1,3 +1,9 @@
+DROP TABLE IF EXISTS public.call_participants CASCADE;
+DROP TABLE IF EXISTS public.calls CASCADE;
+DROP TABLE IF EXISTS public.messages CASCADE;
+DROP TABLE IF EXISTS public.chat_participants CASCADE;
+DROP TABLE IF EXISTS public.chats CASCADE;
+
 -- Create the chats table
 CREATE TABLE public.chats (
     id bigint NOT NULL,

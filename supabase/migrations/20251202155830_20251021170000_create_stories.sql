@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS public.stories CASCADE;
 
 -- Create stories table
 CREATE TABLE public.stories (
