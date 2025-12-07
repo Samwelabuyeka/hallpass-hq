@@ -1,0 +1,17 @@
+
+Dropped the old FK (profiles.id).
+Added a new FK: courses.created_by → profiles.user_id ON UPDATE CASCADE ON DELETE SET NULL.
+Confirmed the courses table now has the expected FK definition.
+Validation (summary):
+
+The new FK exists: FOREIGN KEY (created_by) REFERENCES profiles(user_id) ON UPDATE CASCADE ON DELETE SET NULL.
+No data conflicts were detected before the change.
+Notes and recommendations:
+
+This makes the auth user's UUID (profiles.user_id, which maps to auth.users.id) the canonical join key across related tables.
+If you have application code that expects courses.created_by to be a profile.id, ensure it uses the auth user id instead.
+If you want the opposite behavior (use profiles.id everywhere), we can convert the other tables — that's more invasive.
+Anything else to align (e.g., change other FKs, add indexes on profiles.user_id, or update docs)?
+
+
+

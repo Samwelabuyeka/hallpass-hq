@@ -1,76 +1,45 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tables } from '@/types/supabase';
+import { InFeedAd } from '@/components/ui/InFeedAd';
 
-export interface Story {
-    id: string;
-    content_url: string;
-    story_type: 'image' | 'video';
-    user_id: string;
-    profiles: { // Using profiles alias to match potential query structure
-        full_name: string;
-        avatar_url: string;
-    }
-}
+type StoryWithProfile = Tables<'stories'> & { profiles: { id: string, full_name: string, avatar_url: string } };
 
 interface StoryReelProps {
-  onStorySelect: (userId: string, stories: Story[]) => void;
+  userStories: Map<string, StoryWithProfile[]>;
+  onUserClick: (userId: string) => void;
 }
 
-export function StoryReel({ onStorySelect }: StoryReelProps) {
-  const [userStories, setUserStories] = useState<Map<string, Story[]>>(new Map());
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStories = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('stories')
-        .select(`
-          id, content_url, story_type, user_id,
-          profiles ( full_name, avatar_url )
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching stories:', error);
-      } else {
-        const storiesByUser = new Map<string, Story[]>();
-        for (const story of data as any[]) { // Cast to any to handle profile relation
-            if (!storiesByUser.has(story.user_id)) {
-                storiesByUser.set(story.user_id, []);
-            }
-            storiesByUser.get(story.user_id)?.push(story as Story);
-        }
-        setUserStories(storiesByUser);
-      }
-      setLoading(false);
-    };
-
-    fetchStories();
-  }, []);
-
-  if (loading) {
-    return <div>Loading stories...</div>;
-  }
+export function StoryReel({ userStories, onUserClick }: StoryReelProps) {
+  const users = Array.from(userStories.values()).map(stories => stories[0].profiles);
 
   return (
-    <div className="p-4 border-b">
-      <h3 className="text-lg font-semibold mb-2">Stories</h3>
-      <div className="flex space-x-4 overflow-x-auto pb-2">
-        {Array.from(userStories.entries()).map(([userId, stories]) => (
-          <div 
-            key={userId} 
-            className="flex flex-col items-center cursor-pointer" 
-            onClick={() => onStorySelect(userId, stories)}
-          >
-            <Avatar className="w-16 h-16 border-2 border-primary">
-              <AvatarImage src={stories[0].profiles.avatar_url} />
-              <AvatarFallback>{stories[0].profiles.full_name[0]}</AvatarFallback>
-            </Avatar>
-            <span className="text-xs mt-1">{stories[0].profiles.full_name}</span>
-          </div>
+    <div className="bg-background dark:bg-black p-4 rounded-lg shadow-inner">
+      <div className="flex items-center space-x-4 overflow-x-auto pb-2 scrollbar-hide">
+        {users.map((user, index) => (
+          <>
+            <div 
+              key={user.id} 
+              className="flex flex-col items-center cursor-pointer group" 
+              onClick={() => onUserClick(user.id)}
+            >
+              <div className="relative">
+                  <Avatar className="w-16 h-16 transition-transform duration-300 transform group-hover:scale-110">
+                      <AvatarImage src={user.avatar_url} />
+                      <AvatarFallback>{user.full_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="absolute -top-1 -right-1 -bottom-1 -left-1 rounded-full bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 transform rotate-45 -z-10 group-hover:rotate-90 transition-transform duration-500"></div>
+              </div>
+              <span className="text-xs text-muted-foreground dark:text-gray-300 mt-2 truncate w-16 text-center">
+                  {user.full_name}
+              </span>
+            </div>
+            {(index + 1) % 8 === 0 && (
+                <div className="w-16 h-16 flex items-center justify-center bg-gray-200 dark:bg-gray-800 rounded-full">
+                    <InFeedAd client="ca-pub-7929365740282293" slot="7056026184" layoutKey="-6t+ed+2i-1n-4w" />
+                </div>
+            )}
+          </>
         ))}
       </div>
     </div>

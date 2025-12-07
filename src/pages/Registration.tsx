@@ -6,13 +6,13 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
 
 export function Registration() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [course, setCourse] = useState('');
   const [combination, setCombination] = useState('');
   const [academicYear, setAcademicYear] = useState<number | ''>('');
@@ -22,20 +22,25 @@ export function Registration() {
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) return;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('university_id, year, semester, academic_year')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (error) {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('university_id, year, semester, course_id')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (error) throw error;
+
+        if (data.course_id) {
+          navigate('/dashboard');
+        } else {
+          setUserProfile(data);
+        }
+      } catch (error) {
         toast.error('Error fetching profile', { description: 'Please ensure your profile is set up correctly.' });
         navigate('/setup');
-      } else {
-        setUserProfile(data);
-        if (data.academic_year) {
-          setAcademicYear(data.academic_year);
-        }
+      } finally {
+        setLoading(false);
       }
     };
     fetchProfile();
@@ -44,8 +49,9 @@ export function Registration() {
   const handleCourseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newCourse = e.target.value;
     setCourse(newCourse);
-    setIsEducation(newCourse.toLowerCase().trim() === 'education');
-    if (newCourse.toLowerCase().trim() !== 'education') {
+    const isEdu = newCourse.toLowerCase().trim() === 'education';
+    setIsEducation(isEdu);
+    if (!isEdu) {
         setCombination('');
     }
   };
@@ -67,61 +73,66 @@ export function Registration() {
             .from('courses')
             .select('id')
             .eq('university_id', userProfile.university_id)
-            .eq('name', courseName)
+            .ilike('name', courseName) // Case-insensitive search
             .single();
 
         if (courseError && courseError.code !== 'PGRST116') throw courseError; // Throw if error is not 'not found'
 
         if (!courseData) {
+            // If course doesn't exist, create it with the student as the creator
             const { data: newCourseData, error: newCourseError } = await supabase
                 .from('courses')
-                .insert({ university_id: userProfile.university_id, name: courseName })
+                .insert({ 
+                    university_id: userProfile.university_id, 
+                    name: courseName,
+                    created_by: user.id // Student is the creator
+                })
                 .select('id')
                 .single();
             if (newCourseError) throw newCourseError;
             courseData = newCourseData;
         }
         
-        const courseId = courseData.id;
+        const courseId = courseData!.id;
 
-        // Update user's profile with course_id and academic_year
+        // Update user's profile with course_id and year
         const { error: profileUpdateError } = await supabase
             .from('profiles')
-            .update({ course_id: courseId, academic_year: academicYear })
+            .update({ course_id: courseId, year: academicYear })
             .eq('user_id', user.id);
 
         if (profileUpdateError) throw profileUpdateError;
 
-        // Step 2: Check if a unit set already exists for this course/combination
+        // Step 2: Check for an existing unit set
         let { data: unitSet, error: unitSetError } = await supabase
             .from('course_unit_sets')
             .select('id, units:course_unit_set_units(unit_code, unit_name)')
             .eq('course_id', courseId)
-            .eq('year', userProfile.year)
+            .eq('year', academicYear)
             .eq('semester', userProfile.semester)
             .eq('combination', combinationName)
             .single();
         
         if (unitSetError && unitSetError.code !== 'PGRST116') throw unitSetError;
 
-        if (unitSet) {
-            // If set exists, auto-enroll student
+        if (unitSet && unitSet.units.length > 0) {
+            // Auto-enroll student in existing units
             const studentUnits = unitSet.units.map(u => ({
                 user_id: user.id,
                 unit_code: u.unit_code,
                 unit_name: u.unit_name,
                 is_active: true,
                 semester: userProfile.semester,
-                year: userProfile.year,
+                year: academicYear,
             }));
 
-            const { error: upsertError } = await supabase.from('student_units').upsert(studentUnits);
+            const { error: upsertError } = await supabase.from('student_units').upsert(studentUnits, { onConflict: 'user_id,unit_code' });
             if (upsertError) throw upsertError;
 
             toast.success('Registration Complete', { description: `You have been enrolled in ${studentUnits.length} units.` });
             navigate('/dashboard');
         } else {
-            // If no set exists, redirect to the unit selection page
+            // Redirect to unit selection if no units are defined yet
             toast.info('Define Your Units', { description: 'You are the first to register for this course/combination. Please select your units.' });
             navigate('/unit-selection', { state: { courseId, combination: combinationName, academicYear } });
         }
@@ -134,12 +145,16 @@ export function Registration() {
     }
   };
 
+  if (loading) {
+    return <div>Loading...</div>; // Full screen loader
+  }
+
   return (
     <div className="flex justify-center items-center h-screen">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Student Registration</CardTitle>
-          <p className="text-muted-foreground">Enter your course details. If you're the first for your course, you'll help define the units for everyone else.</p>
+          <CardDescription>Enter your course details. If you're the first for your course, you'll help define the units for everyone else.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -156,12 +171,12 @@ export function Registration() {
             </div>
 
             <div>
-              <Label htmlFor="academicYear">Academic Year</Label>
+              <Label htmlFor="academicYear">Current Year of Study</Label>
               <Input
                 id="academicYear"
                 type="number"
                 value={academicYear}
-                onChange={(e) => setAcademicYear(parseInt(e.target.value, 10))}
+                onChange={(e) => setAcademicYear(parseInt(e.target.value, 10) || '')}
                 placeholder="e.g., 1, 2, 3"
                 required
               />
@@ -169,7 +184,7 @@ export function Registration() {
 
             {isEducation && (
               <div>
-                <Label htmlFor="combination">Combination</Label>
+                <Label htmlFor="combination">Subject Combination</Label>
                 <Input
                   id="combination"
                   type="text"

@@ -25,7 +25,7 @@ function LecturerDashboard({ profile }: LecturerDashboardProps) {
       const { data, error } = await supabase
         .from('courses')
         .select('*')
-        .eq('created_by', profile.id);
+        .eq('created_by', profile.user_id);
 
       if (error) {
         console.error('Error fetching courses:', error);
@@ -35,7 +35,7 @@ function LecturerDashboard({ profile }: LecturerDashboardProps) {
     };
 
     fetchCourses();
-  }, [profile.id]);
+  }, [profile.user_id]);
 
   const handleMessageClassRep = async (courseId: string) => {
     try {

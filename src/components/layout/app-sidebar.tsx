@@ -1,3 +1,4 @@
+
 import { 
   BookOpen, 
   Calendar, 
@@ -11,7 +12,9 @@ import {
   Files,
   Crown,
   MessageSquare,
-  Users as UsersIcon
+  Users as UsersIcon,
+  BookHeart,
+  ShoppingBag
 } from "lucide-react"
 import { NavLink, useLocation } from "react-router-dom"
 
@@ -30,6 +33,8 @@ import { cn } from "@/lib/utils"
 
 const mainItems = [
   { title: "Dashboard", url: "/", icon: Home },
+  { title: "Stories", url: "/stories", icon: BookHeart },
+  { title: "Marketplace", url: "/marketplace", icon: ShoppingBag },
   { title: "Chat", url: "/chat", icon: MessageSquare },
   { title: "Connections", url: "/connections", icon: UsersIcon },
   { title: "Setup", url: "/setup", icon: Settings },

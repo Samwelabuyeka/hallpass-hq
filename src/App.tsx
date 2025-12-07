@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,7 +9,7 @@ import { AuthProvider, useAuth } from "@/components/auth/auth-provider";
 import { LoginForm } from "@/components/auth/login-form";
 import { CookieBanner } from "@/components/monetization/cookie-banner";
 import Dashboard from "./pages/Dashboard";
-import Setup from "./pages/Setup";
+import { Setup } from "./pages/Setup"; // Correctly import Setup
 import Timetable from "./pages/Timetable";
 import TimetableSimple from "./pages/TimetableSimple";
 import Units from "./pages/Units";
@@ -26,6 +27,11 @@ import ConnectionsPage from "./pages/Connections";
 import { CallHistory } from "./pages/CallHistory";
 import { Registration } from "./pages/Registration";
 import NotFound from "./pages/NotFound";
+import { LecturerRegistration } from "./pages/LecturerRegistration";
+import { Stories } from "./pages/Stories";
+import { CreateStory } from "./pages/CreateStory";
+import { Marketplace } from "./pages/Marketplace";
+import { CreateListing } from "./pages/CreateListing";
 
 const queryClient = new QueryClient();
 
@@ -44,11 +50,28 @@ function AppRoutes() {
   }
 
   if (!user) {
-    return <LoginForm />;
+    // Allow access to login and lecturer registration pages when not logged in
+    return (
+        <Routes>
+            <Route path="/login" element={<LoginForm />} />
+            <Route path="/lecturer-registration" element={<LecturerRegistration />} />
+            <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+    );
   }
 
-  // If user is logged in but has no course, redirect to registration
-  if (user && !profile?.course) {
+  // New user setup flow
+  if (user && !profile?.university_id) {
+    return (
+      <Routes>
+        <Route path="/setup" element={<Setup />} />
+        <Route path="*" element={<Navigate to="/setup" />} />
+      </Routes>
+    );
+  }
+
+  // Student registration flow (after university is set)
+  if (profile?.role === 'student' && !profile?.course_id) {
     return (
       <Routes>
         <Route path="/registration" element={<Registration />} />
@@ -56,10 +79,15 @@ function AppRoutes() {
       </Routes>
     );
   }
-
+  
+  // Main application routes for authenticated and configured users
   return (
     <Routes>
       <Route path="/" element={<Dashboard />} />
+      <Route path="/stories" element={<Stories />} />
+      <Route path="/stories/create" element={<CreateStory />} />
+      <Route path="/marketplace" element={<Marketplace />} />
+      <Route path="/marketplace/create" element={<CreateListing />} />
       <Route path="/chat" element={<ChatPage />} />
       <Route path="/connections" element={<ConnectionsPage />} />
       <Route path="/call-history" element={<CallHistory />} />
@@ -76,7 +104,9 @@ function AppRoutes() {
       <Route path="/class-rep" element={<ClassRep />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/timetable-import" element={<TimetableImport />} />
+      {/* Registration routes should be available but will redirect if already configured */}
       <Route path="/registration" element={<Registration />} />
+      <Route path="/lecturer-registration" element={<LecturerRegistration />} /> 
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

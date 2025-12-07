@@ -1,127 +1,166 @@
 [{
-	"resource": "/home/user/hallpass-hq/src/pages/Dashboard.tsx",
+	"resource": "/home/user/hallpass-hq/src/api/stories/index.ts",
 	"owner": "typescript",
-	"code": "1261",
+	"code": "2344",
 	"severity": 8,
-	"message": "Already included file name '/home/user/hallpass-hq/src/pages/lecturerdashboard.tsx' differs from file name '/home/user/hallpass-hq/src/pages/LecturerDashboard.tsx' only in casing.\n  The file is in the program because:\n    Imported via \"./lecturerdashboard\" from file '/home/user/hallpass-hq/src/pages/Dashboard.tsx'\n    Matched by include pattern 'src' in '/home/user/hallpass-hq/tsconfig.app.json'\n    Matched by include pattern 'src' in '/home/user/hallpass-hq/tsconfig.app.json'",
+	"message": "Type '\"story_likes\"' does not satisfy the constraint '\"stories\" | \"announcements\" | \"attachments\" | \"call_participants\" | \"calls\" | \"chat_participants\" | \"chats\" | \"class_rep_applications\" | \"class_reps\" | \"course_unit_set_units\" | ... 18 more ... | { ...; }'.",
 	"source": "ts",
-	"startLineNumber": 2,
-	"startColumn": 31,
-	"endLineNumber": 2,
-	"endColumn": 52,
-	"relatedInformation": [
-		{
-			"startLineNumber": 29,
-			"startColumn": 15,
-			"endLineNumber": 29,
-			"endColumn": 20,
-			"message": "File is matched by include pattern specified here.",
-			"resource": "/home/user/hallpass-hq/tsconfig.app.json"
-		},
-		{
-			"startLineNumber": 29,
-			"startColumn": 15,
-			"endLineNumber": 29,
-			"endColumn": 20,
-			"message": "File is matched by include pattern specified here.",
-			"resource": "/home/user/hallpass-hq/tsconfig.app.json"
-		}
-	]
-}][{
-	"resource": "/home/user/hallpass-hq/src/pages/lecturerdashboard.tsx",
-	"owner": "typescript",
-	"code": "2769",
-	"severity": 8,
-	"message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"class_reps\" | \"universities\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"courses\"' is not assignable to parameter of type '\"class_reps\" | \"universities\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\"'.\n  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: \"13.0.5\"; }, { Tables: { class_reps: { Row: { created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; }; Insert: { ...; }; Update: { ...; }; Relationships: [...]; }; ... 10 more ...; universities: { ...; }; }; Views: {}; Functions: { ...; }; Enums: {}; CompositeTypes: {}; }, never, never, never>', gave the following error.\n    Argument of type '\"courses\"' is not assignable to parameter of type 'never'.",
-	"source": "ts",
-	"startLineNumber": 26,
-	"startColumn": 15,
-	"endLineNumber": 26,
-	"endColumn": 24
+	"startLineNumber": 6,
+	"startColumn": 25,
+	"endLineNumber": 6,
+	"endColumn": 38
 },{
-	"resource": "/home/user/hallpass-hq/src/pages/lecturerdashboard.tsx",
+	"resource": "/home/user/hallpass-hq/src/api/stories/index.ts",
 	"owner": "typescript",
-	"code": "2352",
+	"code": "2344",
 	"severity": 8,
-	"message": "Conversion of type '({ created_at: string; email: string; full_name: string; id: string; is_admin: boolean; semester: number; student_id: string; university_id: string; updated_at: string; user_id: string; year: number; } | ... 10 more ... | { ...; })[]' to type 'Course[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.\n  Type '{ created_at: string; email: string; full_name: string; id: string; is_admin: boolean; semester: number; student_id: string; university_id: string; updated_at: string; user_id: string; year: number; } | ... 10 more ... | { ...; }' is not comparable to type 'Course'.\n    Property 'description' is missing in type '{ code: string; country: string; created_at: string; id: string; is_active: boolean; logo_url: string; name: string; updated_at: string; }' but required in type 'Course'.",
+	"message": "Type '\"story_comments\"' does not satisfy the constraint '\"stories\" | \"announcements\" | \"attachments\" | \"call_participants\" | \"calls\" | \"chat_participants\" | \"chats\" | \"class_rep_applications\" | \"class_reps\" | \"course_unit_set_units\" | ... 18 more ... | { ...; }'.",
 	"source": "ts",
-	"startLineNumber": 33,
-	"startColumn": 20,
-	"endLineNumber": 33,
-	"endColumn": 36,
-	"relatedInformation": [
-		{
-			"startLineNumber": 16,
-			"startColumn": 3,
-			"endLineNumber": 16,
-			"endColumn": 14,
-			"message": "'description' is declared here.",
-			"resource": "/home/user/hallpass-hq/src/pages/lecturerdashboard.tsx"
-		}
-	]
+	"startLineNumber": 7,
+	"startColumn": 28,
+	"endLineNumber": 7,
+	"endColumn": 44
 },{
-	"resource": "/home/user/hallpass-hq/src/pages/lecturerdashboard.tsx",
-	"owner": "typescript",
-	"code": "2345",
-	"severity": 8,
-	"message": "Argument of type '\"create_or_get_chat_with_class_rep\"' is not assignable to parameter of type '\"search_units_fuzzy\"'.",
-	"source": "ts",
-	"startLineNumber": 42,
-	"startColumn": 58,
-	"endLineNumber": 42,
-	"endColumn": 93
-}][{
-	"resource": "/home/user/hallpass-hq/src/pages/LecturerDashboard.tsx",
+	"resource": "/home/user/hallpass-hq/src/api/stories/index.ts",
 	"owner": "typescript",
 	"code": "2589",
 	"severity": 8,
 	"message": "Type instantiation is excessively deep and possibly infinite.",
 	"source": "ts",
-	"startLineNumber": 25,
-	"startColumn": 37,
-	"endLineNumber": 28,
-	"endColumn": 38
+	"startLineNumber": 12,
+	"startColumn": 35,
+	"endLineNumber": 15,
+	"endColumn": 33
 },{
-	"resource": "/home/user/hallpass-hq/src/pages/LecturerDashboard.tsx",
+	"resource": "/home/user/hallpass-hq/src/api/stories/index.ts",
 	"owner": "typescript",
 	"code": "2769",
 	"severity": 8,
-	"message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"class_reps\" | \"universities\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"courses\"' is not assignable to parameter of type '\"class_reps\" | \"universities\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\"'.\n  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: \"13.0.5\"; }, { Tables: { class_reps: { Row: { created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; }; Insert: { ...; }; Update: { ...; }; Relationships: [...]; }; ... 10 more ...; universities: { ...; }; }; Views: {}; Functions: { ...; }; Enums: {}; CompositeTypes: {}; }, never, never, never>', gave the following error.\n    Argument of type '\"courses\"' is not assignable to parameter of type 'never'.",
+	"message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"class_reps\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\" | \"universities\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"story_likes\"' is not assignable to parameter of type '\"class_reps\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\" | \"universities\"'.\n  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: \"13.0.5\"; }, { Tables: { class_reps: { Row: { created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; }; Insert: { ...; }; Update: { ...; }; Relationships: [...]; }; ... 10 more ...; universities: { ...; }; }; Views: {}; Functions: { ...; }; Enums: {}; CompositeTypes: {}; }, never, never, never>', gave the following error.\n    Argument of type '\"story_likes\"' is not assignable to parameter of type 'never'.",
 	"source": "ts",
-	"startLineNumber": 26,
+	"startLineNumber": 13,
 	"startColumn": 15,
-	"endLineNumber": 26,
-	"endColumn": 24
+	"endLineNumber": 13,
+	"endColumn": 28
 },{
-	"resource": "/home/user/hallpass-hq/src/pages/LecturerDashboard.tsx",
+	"resource": "/home/user/hallpass-hq/src/api/stories/index.ts",
 	"owner": "typescript",
-	"code": "2352",
+	"code": "2322",
 	"severity": 8,
-	"message": "Conversion of type '({ created_at: string; email: string; full_name: string; id: string; is_admin: boolean; semester: number; student_id: string; university_id: string; updated_at: string; user_id: string; year: number; } | ... 10 more ... | { ...; })[]' to type 'Course[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.\n  Type '{ created_at: string; email: string; full_name: string; id: string; is_admin: boolean; semester: number; student_id: string; university_id: string; updated_at: string; user_id: string; year: number; } | ... 10 more ... | { ...; }' is not comparable to type 'Course'.\n    Property 'description' is missing in type '{ code: string; country: string; created_at: string; id: string; is_active: boolean; logo_url: string; name: string; updated_at: string; }' but required in type 'Course'.",
+	"message": "Type '({ created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; } | { created_at: string; created_by: string; ... 11 more ...; year: string; } | ... 9 more ... | { ...; })[]' is not assignable to type 'never[]'.\n  Type '{ created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; } | { created_at: string; created_by: string; ... 11 more ...; year: string; } | ... 9 more ... | { ...; }' is not assignable to type 'never'.\n    Type '{ created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; }' is not assignable to type 'never'.",
 	"source": "ts",
-	"startLineNumber": 33,
-	"startColumn": 20,
-	"endLineNumber": 33,
-	"endColumn": 36,
-	"relatedInformation": [
-		{
-			"startLineNumber": 16,
-			"startColumn": 3,
-			"endLineNumber": 16,
-			"endColumn": 14,
-			"message": "'description' is declared here.",
-			"resource": "/home/user/hallpass-hq/src/pages/LecturerDashboard.tsx"
-		}
-	]
+	"startLineNumber": 17,
+	"startColumn": 5,
+	"endLineNumber": 17,
+	"endColumn": 11
 },{
-	"resource": "/home/user/hallpass-hq/src/pages/LecturerDashboard.tsx",
+	"resource": "/home/user/hallpass-hq/src/api/stories/index.ts",
 	"owner": "typescript",
-	"code": "2345",
+	"code": "2769",
 	"severity": 8,
-	"message": "Argument of type '\"create_or_get_chat_with_class_rep\"' is not assignable to parameter of type '\"search_units_fuzzy\"'.",
+	"message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"class_reps\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\" | \"universities\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"story_likes\"' is not assignable to parameter of type '\"class_reps\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\" | \"universities\"'.\n  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: \"13.0.5\"; }, { Tables: { class_reps: { Row: { created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; }; Insert: { ...; }; Update: { ...; }; Relationships: [...]; }; ... 10 more ...; universities: { ...; }; }; Views: {}; Functions: { ...; }; Enums: {}; CompositeTypes: {}; }, never, never, never>', gave the following error.\n    Argument of type '\"story_likes\"' is not assignable to parameter of type 'never'.",
+	"source": "ts",
+	"startLineNumber": 22,
+	"startColumn": 15,
+	"endLineNumber": 22,
+	"endColumn": 28
+},{
+	"resource": "/home/user/hallpass-hq/src/api/stories/index.ts",
+	"owner": "typescript",
+	"code": "2769",
+	"severity": 8,
+	"message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"class_reps\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\" | \"universities\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"story_likes\"' is not assignable to parameter of type '\"class_reps\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\" | \"universities\"'.\n  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: \"13.0.5\"; }, { Tables: { class_reps: { Row: { created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; }; Insert: { ...; }; Update: { ...; }; Relationships: [...]; }; ... 10 more ...; universities: { ...; }; }; Views: {}; Functions: { ...; }; Enums: {}; CompositeTypes: {}; }, never, never, never>', gave the following error.\n    Argument of type '\"story_likes\"' is not assignable to parameter of type 'never'.",
+	"source": "ts",
+	"startLineNumber": 29,
+	"startColumn": 15,
+	"endLineNumber": 29,
+	"endColumn": 28
+},{
+	"resource": "/home/user/hallpass-hq/src/api/stories/index.ts",
+	"owner": "typescript",
+	"code": "2769",
+	"severity": 8,
+	"message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"class_reps\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\" | \"universities\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"story_comments\"' is not assignable to parameter of type '\"class_reps\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\" | \"universities\"'.\n  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: \"13.0.5\"; }, { Tables: { class_reps: { Row: { created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; }; Insert: { ...; }; Update: { ...; }; Relationships: [...]; }; ... 10 more ...; universities: { ...; }; }; Views: {}; Functions: { ...; }; Enums: {}; CompositeTypes: {}; }, never, never, never>', gave the following error.\n    Argument of type '\"story_comments\"' is not assignable to parameter of type 'never'.",
+	"source": "ts",
+	"startLineNumber": 39,
+	"startColumn": 15,
+	"endLineNumber": 39,
+	"endColumn": 31
+},{
+	"resource": "/home/user/hallpass-hq/src/api/stories/index.ts",
+	"owner": "typescript",
+	"code": "2322",
+	"severity": 8,
+	"message": "Type '({ created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; profiles: SelectQueryError<\"could not find the relation between class_reps and profiles\">; } | ... 142 more ... | { ...; })[]' is not assignable to type 'never[]'.\n  Type '{ created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; profiles: SelectQueryError<\"could not find the relation between class_reps and profiles\">; } | ... 142 more ... | { ...; }' is not assignable to type 'never'.\n    Type '{ created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; profiles: SelectQueryError<\"could not find the relation between class_reps and profiles\">; }' is not assignable to type 'never'.",
+	"source": "ts",
+	"startLineNumber": 44,
+	"startColumn": 5,
+	"endLineNumber": 44,
+	"endColumn": 11
+},{
+	"resource": "/home/user/hallpass-hq/src/api/stories/index.ts",
+	"owner": "typescript",
+	"code": "2769",
+	"severity": 8,
+	"message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"class_reps\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\" | \"universities\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"story_comments\"' is not assignable to parameter of type '\"class_reps\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\" | \"universities\"'.\n  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: \"13.0.5\"; }, { Tables: { class_reps: { Row: { created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; }; Insert: { ...; }; Update: { ...; }; Relationships: [...]; }; ... 10 more ...; universities: { ...; }; }; Views: {}; Functions: { ...; }; Enums: {}; CompositeTypes: {}; }, never, never, never>', gave the following error.\n    Argument of type '\"story_comments\"' is not assignable to parameter of type 'never'.",
+	"source": "ts",
+	"startLineNumber": 49,
+	"startColumn": 15,
+	"endLineNumber": 49,
+	"endColumn": 31
+},{
+	"resource": "/home/user/hallpass-hq/src/api/stories/index.ts",
+	"owner": "typescript",
+	"code": "2322",
+	"severity": 8,
+	"message": "Type '{ created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; profiles: SelectQueryError<\"could not find the relation between class_reps and profiles\">; } | ... 142 more ... | { ...; }' is not assignable to type 'never'.\n  Type '{ created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; profiles: SelectQueryError<\"could not find the relation between class_reps and profiles\">; }' is not assignable to type 'never'.",
+	"source": "ts",
+	"startLineNumber": 54,
+	"startColumn": 5,
+	"endLineNumber": 54,
+	"endColumn": 11
+}][{
+	"resource": "/home/user/hallpass-hq/src/pages/CreateListing.tsx",
+	"owner": "typescript",
+	"code": "2339",
+	"severity": 8,
+	"message": "Property 'isUploading' does not exist on type '{ files: UploadedFile[]; loading: boolean; uploading: boolean; uploadFile: (file: File) => Promise<void>; deleteFile: (fileName: string) => Promise<void>; refetch: () => Promise<...>; }'.",
+	"source": "ts",
+	"startLineNumber": 20,
+	"startColumn": 11,
+	"endLineNumber": 20,
+	"endColumn": 22
+},{
+	"resource": "/home/user/hallpass-hq/src/pages/CreateListing.tsx",
+	"owner": "typescript",
+	"code": "2554",
+	"severity": 8,
+	"message": "Expected 1 arguments, but got 2.",
 	"source": "ts",
 	"startLineNumber": 42,
-	"startColumn": 58,
+	"startColumn": 48,
 	"endLineNumber": 42,
-	"endColumn": 93
+	"endColumn": 63
+},{
+	"resource": "/home/user/hallpass-hq/src/pages/CreateListing.tsx",
+	"owner": "typescript",
+	"code": "1345",
+	"severity": 8,
+	"message": "An expression of type 'void' cannot be tested for truthiness.",
+	"source": "ts",
+	"startLineNumber": 43,
+	"startColumn": 12,
+	"endLineNumber": 43,
+	"endColumn": 21
+},{
+	"resource": "/home/user/hallpass-hq/src/pages/CreateListing.tsx",
+	"owner": "typescript",
+	"code": "2769",
+	"severity": 8,
+	"message": "No overload matches this call.\n  Overload 1 of 2, '(relation: \"class_reps\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\" | \"universities\"): PostgrestQueryBuilder<...>', gave the following error.\n    Argument of type '\"listings\"' is not assignable to parameter of type '\"class_reps\" | \"exam_timetables\" | \"imported_rows\" | \"main_timetables\" | \"master_timetables\" | \"master_units\" | \"notification_recipients\" | \"notifications\" | \"profiles\" | \"student_units\" | \"timetable_audit\" | \"universities\"'.\n  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: \"13.0.5\"; }, { Tables: { class_reps: { Row: { created_at: string; id: string; is_active: boolean; semester: number; unit_code: string; unit_name: string; university_id: string; user_id: string; year: number; }; Insert: { ...; }; Update: { ...; }; Relationships: [...]; }; ... 10 more ...; universities: { ...; }; }; Views: {}; Functions: { ...; }; Enums: {}; CompositeTypes: {}; }, never, never, never>', gave the following error.\n    Argument of type '\"listings\"' is not assignable to parameter of type 'never'.",
+	"source": "ts",
+	"startLineNumber": 47,
+	"startColumn": 45,
+	"endLineNumber": 47,
+	"endColumn": 55
 }]

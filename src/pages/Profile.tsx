@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,31 +10,15 @@ import { useAuth } from "@/components/auth/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { User, Mail, School, Hash, Calendar, Save, Upload, Loader2 } from "lucide-react"
+import { Tables } from "@/types/supabase"
 
-interface Profile {
-  id: string
-  user_id: string
-  email: string
-  full_name: string | null
-  university_id: string | null
-  student_id: string | null
-  semester: number | null
-  year: number | null
-  is_admin: boolean
-  avatar_url: string | null;
-  created_at: string
-  updated_at: string
-}
-
-interface University {
-  id: string
-  name: string
-  code: string
-}
+type Profile = Tables<"profiles">;
+type University = Tables<"universities">;
 
 export default function Profile() {
   const { user, signOut, updateProfile } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [university, setUniversity] = useState<University | null>(null)
   const [universities, setUniversities] = useState<University[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -65,14 +48,25 @@ export default function Profile() {
 
   const loadProfile = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', user!.id)
-        .maybeSingle()
+        .eq('id', user!.id)
+        .single()
 
-      if (error) throw error
-      setProfile(data)
+      if (profileError) throw profileError
+      setProfile(profileData)
+
+      if (profileData.university_id) {
+          const { data: universityData, error: universityError } = await supabase
+              .from('universities')
+              .select('*')
+              .eq('id', profileData.university_id)
+              .single();
+          if (universityError) throw universityError;
+          setUniversity(universityData);
+      }
+
     } catch (error) {
       console.error('Error loading profile:', error)
       toast({
@@ -105,7 +99,7 @@ export default function Profile() {
 
     setSaving(true);
     try {
-      await updateProfile(profile.full_name, avatarFile || undefined);
+      await updateProfile(profile, avatarFile || undefined);
     } catch (error) {
       // Error is already handled by the auth provider's toast
     } finally {
@@ -147,8 +141,6 @@ export default function Profile() {
     )
   }
 
-  const selectedUniversity = universities.find(u => u.id === profile.university_id)
-
   return (
     <AppLayout>
       <div className="flex-1 space-y-6 p-8 pt-6">
@@ -176,7 +168,7 @@ export default function Profile() {
                   <AvatarImage src={avatarPreview || profile.avatar_url || undefined} />
                   <AvatarFallback className="text-2xl">
                     {profile.full_name?.split(' ').map(n => n[0]).join('') ||
-                     profile.email.slice(0, 2).toUpperCase()}
+                     (profile.email && profile.email.slice(0, 2).toUpperCase())}
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
@@ -217,7 +209,7 @@ export default function Profile() {
                     <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="email"
-                      value={profile.email}
+                      value={profile.email || ""}
                       disabled
                       className="pl-9 bg-muted"
                     />
@@ -248,9 +240,9 @@ export default function Profile() {
                     <SelectValue placeholder="Select your university" />
                   </SelectTrigger>
                   <SelectContent>
-                    {universities.map((university) => (
-                      <SelectItem key={university.id} value={university.id}>
-                        {university.name} ({university.code})
+                    {universities.map((uni) => (
+                      <SelectItem key={uni.id} value={uni.id}>
+                        {uni.name} ({uni.code})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -271,13 +263,13 @@ export default function Profile() {
                 </div>
               </div>
 
-              {selectedUniversity && (
+              {university && (
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="text-sm">
-                    <strong>Current University:</strong> {selectedUniversity.name}
+                    <strong>Current University:</strong> {university.name}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Code: {selectedUniversity.code}
+                    Code: {university.code}
                   </p>
                 </div>
               )}

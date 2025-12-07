@@ -1,10 +1,16 @@
-
+wi
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Bell, BookOpen, Calendar, FileText } from "lucide-react";
+import { ArrowRight, Bell, BookOpen, Calendar, FileText, PlusCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/types/supabase";
+import { AdBanner } from "@/components/monetization/AdBanner";
+
+type Story = Tables<'stories'> & { profiles: { full_name: string, avatar_url: string } };
 
 const notifications = [
   {
@@ -49,6 +55,31 @@ const courses = [
 ];
 
 const StudentDashboard = () => {
+  const [stories, setStories] = useState<Story[]>([]);
+
+  useEffect(() => {
+    const fetchStories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('stories')
+          .select(`
+            *,
+            profiles ( full_name, avatar_url )
+          `)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (error) throw error;
+
+        setStories(data as Story[]);
+      } catch (error) {
+        console.error('Error fetching stories:', error);
+      }
+    };
+
+    fetchStories();
+  }, []);
+
   return (
     <div className="p-4 md:p-8">
       <h1 className="text-3xl font-bold mb-6">Student Dashboard</h1>
@@ -123,6 +154,58 @@ const StudentDashboard = () => {
               </CardContent>
             </Card>
           </div>
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Recent Stories</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {stories.slice(0, 2).map((story) => (
+                  <Link to={`/stories/${story.id}`} key={story.id} className="block">
+                    <div className="flex items-start p-2 rounded-lg hover:bg-muted">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={story.profiles.avatar_url} />
+                        <AvatarFallback>{story.profiles.full_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="ml-4 flex-1">
+                        <p className="text-sm font-medium leading-none">
+                          {story.profiles.full_name}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {story.content}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+                {stories.length > 2 && <AdBanner />}
+                {stories.slice(2).map((story) => (
+                  <Link to={`/stories/${story.id}`} key={story.id} className="block">
+                    <div className="flex items-start p-2 rounded-lg hover:bg-muted">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={story.profiles.avatar_url} />
+                        <AvatarFallback>{story.profiles.full_name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="ml-4 flex-1">
+                        <p className="text-sm font-medium leading-none">
+                          {story.profiles.full_name}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {story.content}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <Button variant="outline" className="w-full mt-4" asChild>
+                <Link to="/create-story">
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Create Story
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         <Card>

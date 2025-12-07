@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { UniversitySelector } from '@/components/university-selector';
 
 export function LecturerRegistration() {
   const navigate = useNavigate();
@@ -15,9 +16,20 @@ export function LecturerRegistration() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [staffId, setStaffId] = useState('');
+  const [universityId, setUniversityId] = useState('');
+  const [courseName, setCourseName] = useState('');
+  const [courseCode, setCourseCode] = useState('');
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!universityId) {
+      toast.error('Please select your university.');
+      return;
+    }
+    if (!courseName) {
+        toast.error('Please enter a name for your first course.');
+        return;
+    }
     setLoading(true);
 
     try {
@@ -27,7 +39,6 @@ export function LecturerRegistration() {
         options: {
           data: {
             full_name: fullName,
-            // Initial profile data
           },
         },
       });
@@ -35,22 +46,32 @@ export function LecturerRegistration() {
       if (error) throw error;
 
       if (data.user) {
-        // Update the user's profile to set the role to 'lecturer'
+        // Update the user's profile with role and university
         const { error: profileError } = await supabase
           .from('profiles')
           .update({
             role: 'lecturer',
             full_name: fullName,
-            // In a real scenario, you'd likely have a university_id and staff_id
+            university_id: universityId,
           })
           .eq('user_id', data.user.id);
 
         if (profileError) throw profileError;
 
-        toast.success('Registration Successful', {
-          description: 'Please check your email to verify your account.',
+        // Create the initial course for the lecturer
+        const { error: courseError } = await supabase.from('courses').insert({
+          name: courseName,
+          code: courseCode || null,
+          created_by: data.user.id,
+          university_id: universityId,
         });
-        navigate('/login'); // Redirect to login after successful registration
+
+        if (courseError) throw courseError;
+
+        toast.success('Registration Successful', {
+          description: 'Please check your email to verify your account. Your initial course has been created.',
+        });
+        navigate('/');
       } else {
         throw new Error('User registration did not return a user.');
       }
@@ -64,11 +85,11 @@ export function LecturerRegistration() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
+    <div className="flex justify-center items-center min-h-screen py-8">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Lecturer Registration</CardTitle>
-          <CardDescription>Create your account to connect with students and manage your courses.</CardDescription>
+          <CardDescription>Create your account and set up your first course.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp} className="space-y-4">
@@ -111,6 +132,41 @@ export function LecturerRegistration() {
                 onChange={(e) => setStaffId(e.target.value)}
               />
             </div>
+
+            <div>
+              <Label>University</Label>
+              <UniversitySelector
+                value={universityId}
+                onValueChange={setUniversityId}
+                placeholder="Select your university..."
+              />
+            </div>
+
+            <div className="pt-4 border-t">
+                <h3 className="text-lg font-medium mb-2">Create Your First Course</h3>
+                <div>
+                  <Label htmlFor="course-name">Course Name</Label>
+                  <Input
+                    id="course-name"
+                    type="text"
+                    value={courseName}
+                    onChange={(e) => setCourseName(e.target.value)}
+                    placeholder="e.g., Introduction to AI"
+                    required
+                  />
+                </div>
+                <div className="mt-4">
+                  <Label htmlFor="course-code">Course Code (Optional)</Label>
+                  <Input
+                    id="course-code"
+                    type="text"
+                    value={courseCode}
+                    onChange={(e) => setCourseCode(e.target.value)}
+                    placeholder="e.g., CS404"
+                  />
+                </div>
+            </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Creating Account...' : 'Register'}
             </Button>
