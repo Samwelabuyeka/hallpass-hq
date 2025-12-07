@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AdBanner } from '@/components/ui/AdBanner';
+import AdBanner from '@/components/AdBanner';
 import { InFeedAd } from '@/components/ui/InFeedAd';
 import { Tables } from '@/types/supabase';
 
@@ -36,7 +36,7 @@ export function Marketplace() {
 
   return (
     <div className="p-4">
-        <AdBanner client="ca-pub-7929365740282293" slot="3047949675" />
+        <AdBanner />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Marketplace</h1>
         <Button asChild>

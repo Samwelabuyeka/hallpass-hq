@@ -7,7 +7,7 @@ import { Heart, Send, X } from 'lucide-react';
 import { Tables } from '@/types/supabase';
 import { useAuth } from '@/components/auth/auth-provider';
 import { getStoryLikes, likeStory, unlikeStory, getStoryComments, addStoryComment } from '@/api/stories';
-import { AdBanner } from '@/components/ui/AdBanner';
+import AdBanner from '@/components/AdBanner';
 
 type StoryWithProfile = Tables<'stories'> & { profiles: { id: string, full_name: string, avatar_url: string } };
 type CommentWithProfile = Tables<'story_comments'> & { profiles: { full_name: string, avatar_url: string } };
@@ -145,9 +145,11 @@ export function StoryViewer({
                 {stories.map((_, idx) => (
                 <div key={idx} className="h-1 flex-1 bg-gray-500/50 rounded-full">
                     <div
-                        style={{width: idx < storyIndex ? '100%' : (idx === storyIndex ? '100%' : '0%')}}
+                        style={{
+                            width: idx < storyIndex ? '100%' : (idx === storyIndex ? '100%' : '0%'),
+                            transitionDuration: idx === storyIndex ? '5s' : '0s'
+                        }}
                         className={`h-full bg-white rounded-full ${idx === storyIndex ? 'transition-width ease-linear' : ''}`}
-                        style={{transitionDuration: idx === storyIndex ? '5s' : '0s'}}
                     />
                 </div>
                 ))}
@@ -173,7 +175,7 @@ export function StoryViewer({
         </div>
         
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
-          <AdBanner client="ca-pub-7929365740282293" slot="3047949675" />
+          <AdBanner />
           <div className="flex items-center justify-between">
             <form onSubmit={handleCommentSubmit} className="flex-1 flex items-center">
               <Input
