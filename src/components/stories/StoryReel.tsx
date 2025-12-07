@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tables } from '@/types/supabase';
 import { InFeedAd } from '@/components/ui/InFeedAd';
 
-type StoryWithProfile = Tables<'stories'> & { profiles: { id: string, full_name: string, avatar_url: string } };
+type StoryWithProfile = Tables<'stories'> & { profiles: { id: string, full_name: string, avatar_url: string } | null };
 
 interface StoryReelProps {
   userStories: Map<string, StoryWithProfile[]>;
@@ -11,7 +11,7 @@ interface StoryReelProps {
 }
 
 export function StoryReel({ userStories, onUserClick }: StoryReelProps) {
-  const users = Array.from(userStories.values()).map(stories => stories[0].profiles);
+  const users = Array.from(userStories.values()).map(stories => stories[0].profiles).filter(Boolean);
 
   return (
     <div className="bg-background dark:bg-black p-4 rounded-lg shadow-inner">
