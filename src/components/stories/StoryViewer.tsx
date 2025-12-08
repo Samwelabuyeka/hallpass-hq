@@ -10,7 +10,6 @@ import { getStoryLikes, likeStory, unlikeStory, getStoryComments, addStoryCommen
 import AdBanner from '@/components/AdBanner';
 
 type StoryWithProfile = Tables<'stories'> & { profiles: { id: string, full_name: string, avatar_url: string } };
-type CommentWithProfile = Tables<'story_comments'> & { profiles: { full_name: string, avatar_url: string } };
 
 interface StoryViewerProps {
   userStories: Map<string, StoryWithProfile[]>;
@@ -29,7 +28,7 @@ export function StoryViewer({
   const [comment, setComment] = useState('');
   
   const [likes, setLikes] = useState<Tables<'story_likes'>[]>([]);
-  const [comments, setComments] = useState<CommentWithProfile[]>([]);
+  const [comments, setComments] = useState<Awaited<ReturnType<typeof getStoryComments>>>([]);
   const [isLiked, setIsLiked] = useState(false);
 
   const userIds = Array.from(userStories.keys());
@@ -50,7 +49,7 @@ export function StoryViewer({
       ]);
 
       setLikes(likesData);
-      setComments(commentsData as CommentWithProfile[]);
+      setComments(commentsData);
 
       if (user) {
         setIsLiked(likesData.some(like => like.user_id === user.id));
@@ -126,7 +125,7 @@ export function StoryViewer({
 
     try {
         const returnedComment = await addStoryComment(currentStory.id, user.id, newComment);
-        setComments(prev => [...prev, returnedComment as CommentWithProfile]);
+        setComments(prev => [...prev, returnedComment]);
     } catch(error) {
         // Handle error, maybe show a toast notification
     }
@@ -162,7 +161,7 @@ export function StoryViewer({
                     </Avatar>
                     <span className="ml-2 font-semibold">{storyProfile.full_name}</span>
                 </div>
-                <button onClick={onClose} className="text-white"><X size={24} /></button>
+                <button onClick={onClose} className="text--white"><X size={24} /></button>
             </div>
         </div>
 
@@ -198,7 +197,7 @@ export function StoryViewer({
           </div>
           <div className="mt-2 text-white text-sm space-y-1 max-h-24 overflow-y-auto">
             {comments.map((c) => (
-              <div key={c.id}><b>{c.profiles.full_name || 'User'}</b>: {c.comment}</div>
+              <div key={c.id}><b>{c.profiles?.full_name || 'User'}</b>: {c.comment}</div>
             ))}
           </div>
         </div>

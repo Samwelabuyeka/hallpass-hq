@@ -28,12 +28,13 @@ type StoryCommentWithProfile = {
 // ====== Likes ======
 
 export const getStoryLikes = async (storyId: string): Promise<StoryLike[]> => {
-    const { data, error } = await (supabase
+    const { data, error } = await supabase
         .from('story_likes')
         .select('*')
-        .eq('story_id', storyId) as Promise<{ data: StoryLike[]; error: any }>);
+        .eq('story_id', storyId);
+
     if (error) throw new Error(error.message);
-    return data || [];
+    return (data as StoryLike[]) || [];
 };
 
 export const likeStory = async (storyId: string, userId: string): Promise<void> => {
@@ -54,22 +55,25 @@ export const unlikeStory = async (storyId: string, userId: string): Promise<void
 // ====== Comments ======
 
 export const getStoryComments = async (storyId: string): Promise<StoryCommentWithProfile[]> => {
-    const { data, error } = await (supabase
+    const { data, error } = await supabase
         .from('story_comments')
         .select('*, profiles(full_name, avatar_url)')
         .eq('story_id', storyId)
-        .order('created_at', { ascending: true }) as Promise<{ data: StoryCommentWithProfile[]; error: any }>);
+        .order('created_at', { ascending: true });
+
     if (error) throw new Error(error.message);
-    return data || [];
+    return (data as StoryCommentWithProfile[]) || [];
 };
 
 export const addStoryComment = async (storyId: string, userId: string, comment: string): Promise<StoryCommentWithProfile> => {
-    const { data, error } = await (supabase
+    const { data, error } = await supabase
         .from('story_comments')
         .insert([{ story_id: storyId, user_id: userId, comment }])
         .select('*, profiles(full_name, avatar_url)')
-        .single() as Promise<{ data: StoryCommentWithProfile; error: any }>);
+        .single();
+        
     if (error) throw new Error(error.message);
     if (!data) throw new Error("No data returned from insert");
-    return data;
+
+    return data as StoryCommentWithProfile;
 };
